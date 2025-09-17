@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.aws-sam/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# AWS files
+lambda-*.zip
+function.zip
+
+# Logs
+*.log
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build directories
+build/
+dist/
