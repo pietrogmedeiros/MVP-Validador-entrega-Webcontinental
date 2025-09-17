@@ -1,0 +1,246 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Validador de Entrega Web Continental - Deploy Completo'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    Description: Environment name
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    MemorySize: 256
+    Environment:
+      Variables:
+        DELIVERY_TABLE: !Ref DeliveryTable
+        DELIVERY_PROOFS_BUCKET: !Ref DeliveryProofsBucket
+        CORS_ORIGIN: '*'
+
+Resources:
+  # DynamoDB Table
+  DeliveryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'validador-entrega-${Environment}-${AWS::AccountId}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: invoiceNumber
+          AttributeType: S
+      KeySchema:
+        - AttributeName: invoiceNumber
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Application
+          Value: ValidadorEntrega
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Lambda Function Role
+  ValidatorApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                Resource: !GetAtt DeliveryTable.Arn
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: '*'
+
+  # Lambda Function
+  ValidatorApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'validador-entrega-api-${Environment}'
+      CodeUri: backend/
+      Handler: index.handler
+      Role: !GetAtt ValidatorApiRole.Arn
+      Events:
+        HealthCheck:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ValidatorApi
+            Path: /health
+            Method: GET
+        ValidateInvoice:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ValidatorApi
+            Path: /validate
+            Method: POST
+        CreateDelivery:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ValidatorApi
+            Path: /delivery
+            Method: POST
+
+  # API Gateway
+  ValidatorApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub 'validador-entrega-api-${Environment}'
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  # S3 Bucket for Website
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'validador-entrega-website-${Environment}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  # S3 Bucket Policy for Website
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${WebsiteBucket}/*'
+
+  # S3 Bucket for Delivery Proofs
+  DeliveryProofsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'validador-entrega-proofs-${Environment}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  # Database Initialization Function Role
+  DatabaseInitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:Scan
+                Resource: !GetAtt DeliveryTable.Arn
+
+  # Database Initialization Function
+  DatabaseInitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'validador-entrega-db-init-${Environment}'
+      CodeUri: backend/
+      Handler: dbInit.handler
+      Role: !GetAtt DatabaseInitRole.Arn
+      Timeout: 60
+
+  # Custom Resource to Initialize Database
+  DatabaseInitializer:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt DatabaseInitFunction.Arn
+      Version: '1.0'
+    DependsOn:
+      - DeliveryTable
+
+Outputs:
+  WebsiteURL:
+    Description: 'URL do Website'
+    Value: !Sub 'https://${CloudFrontDistribution.DomainName}'
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteURL'
+
+  ApiGatewayURL:
+    Description: 'URL da API'
+    Value: !Sub 'https://${ValidatorApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiURL'
+
+  DeliveryTableName:
+    Description: 'Nome da Tabela DynamoDB'
+    Value: !Ref DeliveryTable
+    Export:
+      Name: !Sub '${AWS::StackName}-DeliveryTable'
+
+  DeliveryProofsBucketName:
+    Description: 'Nome do Bucket S3 para Comprovantes'
+    Value: !Ref DeliveryProofsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-ProofsBucket'

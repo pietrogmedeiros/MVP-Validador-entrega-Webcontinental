@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Entrega - Web Continental</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="shortcut icon" href="favicon.png">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-logo">
+                <img src="assets/web.png" alt="Web Continental Logo" class="company-logo">
+            </div>
+            <h1 class="main-title">Validador de Entrega</h1>
+            <p class="subtitle">Registre sua entrega de forma rápida e segura</p>
+        </header>
+
+        <main>
+            <form id="delivery-form" class="delivery-form">
+                <!-- Campo 1: Número da Nota Fiscal -->
+                <div class="form-group">
+                    <label for="invoice-number" class="form-label">
+                        Número da Nota Fiscal
+                        <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="invoice-number" 
+                        name="invoiceNumber" 
+                        class="form-input" 
+                        placeholder="Digite o número da NF"
+                        required
+                    >
+                    <div class="field-feedback" id="invoice-feedback"></div>
+                </div>
+
+                <!-- Área de Validação -->
+                <div id="validation-result" class="validation-result hidden">
+                    <div class="validation-header">
+                        <h3>Nota Fiscal Validada</h3>
+                    </div>
+                    <div class="validation-content">
+                        <div class="validation-item">
+                            <span class="label">CPF (Confirmação):</span>
+                            <span class="value" id="customer-cpf"></span>
+                        </div>
+                        <div class="validation-item">
+                            <span class="label">CEP (Destino):</span>
+                            <span class="value" id="delivery-cep"></span>
+                        </div>
+                        <div class="validation-item">
+                            <span class="label">Produto:</span>
+                            <span class="value" id="product-description"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campo 2: Empresa de Logística -->
+                <div class="form-group">
+                    <label for="logistics-company" class="form-label">
+                        Empresa de Logística
+                        <span class="required">*</span>
+                    </label>
+                    <select id="logistics-company" name="logisticsCompany" class="form-select" required>
+                        <option value="">Selecione a transportadora</option>
+                        <option value="loggi">Loggi</option>
+                        <option value="correios">Correios</option>
+                        <option value="jadlog">Jadlog</option>
+                        <option value="frota-propria">Frota Própria</option>
+                    </select>
+                </div>
+
+                <!-- Campo 3: Comprovante de Entrega -->
+                <div class="form-group">
+                    <label for="delivery-proof" class="form-label">
+                        Anexar Comprovante (Foto)
+                        <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="delivery-proof" 
+                        name="deliveryProof" 
+                        class="form-file" 
+                        accept="image/*"
+                        capture="environment"
+                        required
+                    >
+                    <div class="file-info">
+                        Toque para tirar uma foto do comprovante
+                    </div>
+                    <div id="file-preview" class="file-preview hidden">
+                        <img id="preview-image" src="" alt="Preview do comprovante">
+                        <button type="button" id="remove-file" class="remove-file">Remover foto</button>
+                    </div>
+                </div>
+
+                <!-- Botão de Envio -->
+                <button type="submit" id="submit-btn" class="submit-btn" disabled>
+                    <span class="btn-text">Registrar Entrega</span>
+                </button>
+            </form>
+
+            <!-- Área de Resultado Final -->
+            <div id="submission-result" class="submission-result hidden">
+                <div class="success-message">
+                    <h3>Entrega Registrada com Sucesso!</h3>
+                    <p>Obrigado por utilizar nosso sistema de validação.</p>
+                    <button type="button" id="new-delivery" class="new-delivery-btn">
+                        Nova Entrega
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p class="footer-text">Sistema de Validação de Entregas v1.0</p>
+        </footer>
+    </div>
+
+    <script src="script-fixed.js"></script>
+</body>
+</html>

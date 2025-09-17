@@ -1,0 +1,8 @@
+# Configuração AWS para Validador de Entrega
+# Account ID: 075343201843
+# Região: us-east-2
+# Application: Validador-entrega-1P
+
+export AWS_DEFAULT_REGION=us-east-2
+export AWS_ACCOUNT_ID=075343201843
+export AWS_APPLICATION_ARN="arn:aws:resource-groups:us-east-2:075343201843:group/Validador-entrega-1P/0bfo82n5fahlwjbhw4py8pk6qc"

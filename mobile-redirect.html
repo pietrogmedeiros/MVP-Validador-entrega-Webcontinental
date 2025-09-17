@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Entrega - Web Continental</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://validador-entrega-website-1758128536.s3.us-east-2.amazonaws.com/favicon.png">
+    <link rel="apple-touch-icon" href="https://validador-entrega-website-1758128536.s3.us-east-2.amazonaws.com/favicon.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1E90FF 0%, #1A3A7B 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        header {
+            background: linear-gradient(135deg, #1E90FF 0%, #1A3A7B 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .header-logo {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .company-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .main-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        main {
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .loading-message {
+            font-size: 18px;
+            color: #1E90FF;
+            margin-bottom: 20px;
+        }
+
+        .manual-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #1E90FF 0%, #1A3A7B 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .manual-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1E90FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-logo">
+                <img src="https://validador-entrega-website-1758128536.s3.us-east-2.amazonaws.com/assets/web.png" alt="Web Continental Logo" class="company-logo">
+            </div>
+            <h1 class="main-title">Validador de Entrega</h1>
+            <p class="subtitle">Redirecionamento Automático</p>
+        </header>
+
+        <main>
+            <div class="spinner"></div>
+            <div class="loading-message">Carregando aplicação...</div>
+            <div class="info">
+                Se o redirecionamento não funcionar automaticamente:
+            </div>
+            <a href="https://validador-entrega-website-1758128536.s3.us-east-2.amazonaws.com/index.html" class="manual-link">
+                Clique aqui para acessar
+            </a>
+        </main>
+    </div>
+
+    <script>
+        // Redirecionamento automático após 2 segundos
+        setTimeout(function() {
+            window.location.href = 'https://validador-entrega-website-1758128536.s3.us-east-2.amazonaws.com/index.html';
+        }, 2000);
+    </script>
+</body>
+</html>

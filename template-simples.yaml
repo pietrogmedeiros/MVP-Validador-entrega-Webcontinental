@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Validador de Entrega - Web Continental (Versão Simplificada)'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    Description: Environment name
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        DELIVERY_TABLE: !Ref DeliveryTable
+        CORS_ORIGIN: '*'
+
+Resources:
+  # DynamoDB Table
+  DeliveryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'delivery-orders-${AWS::StackName}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: invoiceNumber
+          AttributeType: S
+      KeySchema:
+        - AttributeName: invoiceNumber
+          KeyType: HASH
+
+  # Lambda Function
+  ValidatorApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: index.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DeliveryTable
+      Events:
+        HealthCheck:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ValidatorApi
+            Path: /health
+            Method: get
+        ValidateInvoice:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ValidatorApi
+            Path: /validate
+            Method: post
+
+  # API Gateway
+  ValidatorApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  # Database Initialization Function
+  DatabaseInitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: dbInit.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DeliveryTable
+
+  # Custom Resource for Database Initialization
+  DatabaseInitializer:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt DatabaseInitFunction.Arn
+      TableName: !Ref DeliveryTable
+
+  # S3 Bucket for Website
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'validador-site-${AWS::StackName}-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  # S3 Bucket Policy
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub '${WebsiteBucket}/*'
+
+Outputs:
+  ApiEndpoint:
+    Description: 'URL da API'
+    Value: !Sub 'https://${ValidatorApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    
+  WebsiteURL:
+    Description: 'URL do Website'
+    Value: !GetAtt WebsiteBucket.WebsiteURL
+    
+  TableName:
+    Description: 'Nome da Tabela DynamoDB'
+    Value: !Ref DeliveryTable
