@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Funcionalidade Cliente/Transportadora</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .conditional-fields {
+            transition: all 0.3s ease-in-out;
+            border: 1px dashed #ccc;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f9f9f9;
+        }
+        .conditional-fields.show {
+            animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .test-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>🧪 Teste - Nova Funcionalidade</h2>
+        <p><strong>Funcionalidade:</strong> Dropdown Cliente/Transportadora com campos condicionais</p>
+        <p><strong>Como testar:</strong> Selecione "Cliente" ou "Transportadora" no dropdown abaixo e veja os campos aparecerem dinamicamente.</p>
+    </div>
+
+    <form>
+        <!-- Campo: Número da NF (simulado) -->
+        <div class="form-group">
+            <label for="invoice-number">Número da Nota Fiscal</label>
+            <input type="text" id="invoice-number" placeholder="NF001234567" value="NF001234567">
+        </div>
+
+        <!-- Campo: Tipo de Entrega -->
+        <div class="form-group">
+            <label for="delivery-type">
+                Você é?
+                <span style="color: red;">*</span>
+            </label>
+            <select id="delivery-type" name="deliveryType" required>
+                <option value="">Selecione o tipo</option>
+                <option value="cliente">Cliente</option>
+                <option value="transportadora">Transportadora</option>
+            </select>
+        </div>
+
+        <!-- Campos para Cliente -->
+        <div id="client-fields" class="conditional-fields hidden">
+            <h3>📋 Dados do Cliente</h3>
+            <div class="form-group">
+                <label for="client-name">
+                    Seu nome completo
+                    <span style="color: red;">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="client-name" 
+                    name="clientName" 
+                    placeholder="Digite o nome completo"
+                >
+            </div>
+            <div class="form-group">
+                <label for="client-cpf">
+                    Seu CPF
+                    <span style="color: red;">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="client-cpf" 
+                    name="clientCpf" 
+                    placeholder="000.000.000-00"
+                    maxlength="14"
+                >
+            </div>
+        </div>
+
+        <!-- Campos para Transportadora -->
+        <div id="logistics-fields" class="conditional-fields hidden">
+            <h3>🚚 Dados da Transportadora</h3>
+            <div class="form-group">
+                <label for="logistics-company">
+                    Empresa de Logística
+                    <span style="color: red;">*</span>
+                </label>
+                <select id="logistics-company" name="logisticsCompany">
+                    <option value="">Selecione a transportadora</option>
+                    <option value="loggi">Loggi</option>
+                    <option value="correios">Correios</option>
+                    <option value="jadlog">Jadlog</option>
+                    <option value="frota-propria">Frota Própria</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="button" onclick="testValidation()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+                🧪 Testar Validação
+            </button>
+        </div>
+    </form>
+
+    <div id="test-result" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; display: none;">
+        <h3>📊 Resultado do Teste:</h3>
+        <pre id="result-data"></pre>
+    </div>
+
+    <script>
+        // DOM Elements
+        const deliveryTypeSelect = document.getElementById('delivery-type');
+        const clientFields = document.getElementById('client-fields');
+        const logisticsFields = document.getElementById('logistics-fields');
+        const clientNameInput = document.getElementById('client-name');
+        const clientCpfInput = document.getElementById('client-cpf');
+        const logisticsCompanySelect = document.getElementById('logistics-company');
+
+        // Event listeners
+        deliveryTypeSelect.addEventListener('change', handleDeliveryTypeChange);
+        clientCpfInput.addEventListener('input', formatCPF);
+
+        // Handle delivery type change
+        function handleDeliveryTypeChange() {
+            const deliveryType = deliveryTypeSelect.value;
+            
+            // Hide all conditional fields first
+            if (clientFields) {
+                clientFields.classList.add('hidden');
+                clientFields.classList.remove('show');
+            }
+            if (logisticsFields) {
+                logisticsFields.classList.add('hidden');
+                logisticsFields.classList.remove('show');
+            }
+            
+            // Show appropriate fields with animation
+            setTimeout(() => {
+                if (deliveryType === 'cliente') {
+                    if (clientFields) {
+                        clientFields.classList.remove('hidden');
+                        clientFields.classList.add('show');
+                        clientNameInput.setAttribute('required', 'required');
+                        clientCpfInput.setAttribute('required', 'required');
+                        logisticsCompanySelect.removeAttribute('required');
+                    }
+                } else if (deliveryType === 'transportadora') {
+                    if (logisticsFields) {
+                        logisticsFields.classList.remove('hidden');
+                        logisticsFields.classList.add('show');
+                        logisticsCompanySelect.setAttribute('required', 'required');
+                        clientNameInput.removeAttribute('required');
+                        clientCpfInput.removeAttribute('required');
+                    }
+                }
+            }, 50);
+        }
+
+        // Format CPF input
+        function formatCPF(event) {
+            let value = event.target.value.replace(/\D/g, '');
+            
+            if (value.length <= 11) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            }
+            
+            event.target.value = value;
+        }
+
+        // Test validation
+        function testValidation() {
+            const deliveryType = deliveryTypeSelect.value;
+            const resultDiv = document.getElementById('test-result');
+            const resultData = document.getElementById('result-data');
+            
+            let result = {
+                deliveryType: deliveryType,
+                valid: false,
+                fields: {}
+            };
+
+            if (deliveryType === 'cliente') {
+                const clientName = clientNameInput.value.trim();
+                const clientCpf = clientCpfInput.value.trim();
+                
+                result.fields = {
+                    clientName: clientName,
+                    clientCpf: clientCpf,
+                    cpfDigitsOnly: clientCpf.replace(/\D/g, ''),
+                    cpfValid: clientCpf.replace(/\D/g, '').length === 11
+                };
+                
+                result.valid = clientName && clientCpf && result.fields.cpfValid;
+                
+            } else if (deliveryType === 'transportadora') {
+                const logisticsCompany = logisticsCompanySelect.value;
+                
+                result.fields = {
+                    logisticsCompany: logisticsCompany
+                };
+                
+                result.valid = !!logisticsCompany;
+            }
+
+            resultData.textContent = JSON.stringify(result, null, 2);
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -42,6 +42,50 @@
                     <div class="field-feedback" id="invoice-feedback"></div>
                 </div>
 
+                <!-- Campo: Tipo de Entrega -->
+                <div class="form-group">
+                    <label for="delivery-type" class="form-label">
+                        Você é?
+                        <span class="required">*</span>
+                    </label>
+                    <select id="delivery-type" name="deliveryType" class="form-select" required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="cliente">Cliente</option>
+                        <option value="transportadora">Transportadora</option>
+                    </select>
+                </div>
+
+                <!-- Campos para Cliente -->
+                <div id="client-fields" class="conditional-fields hidden">
+                    <div class="form-group">
+                        <label for="client-name" class="form-label">
+                            Seu nome completo
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="client-name" 
+                            name="clientName" 
+                            class="form-input" 
+                            placeholder="Digite o nome completo"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="client-cpf" class="form-label">
+                            Seu CPF
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="client-cpf" 
+                            name="clientCpf" 
+                            class="form-input" 
+                            placeholder="000.000.000-00"
+                            maxlength="14"
+                        >
+                    </div>
+                </div>
+
                 <!-- Área de Validação -->
                 <div id="validation-result" class="validation-result hidden">
                     <div class="validation-header">
@@ -63,19 +107,21 @@
                     </div>
                 </div>
 
-                <!-- Campo 2: Empresa de Logística -->
-                <div class="form-group">
-                    <label for="logistics-company" class="form-label">
-                        Empresa de Logística
-                        <span class="required">*</span>
-                    </label>
-                    <select id="logistics-company" name="logisticsCompany" class="form-select" required>
-                        <option value="">Selecione a transportadora</option>
-                        <option value="loggi">Loggi</option>
-                        <option value="correios">Correios</option>
-                        <option value="jadlog">Jadlog</option>
-                        <option value="frota-propria">Frota Própria</option>
-                    </select>
+                <!-- Campo: Empresa de Logística (apenas para Transportadora) -->
+                <div id="logistics-fields" class="conditional-fields hidden">
+                    <div class="form-group">
+                        <label for="logistics-company" class="form-label">
+                            Empresa de Logística
+                            <span class="required">*</span>
+                        </label>
+                        <select id="logistics-company" name="logisticsCompany" class="form-select">
+                            <option value="">Selecione a transportadora</option>
+                            <option value="loggi">Loggi</option>
+                            <option value="correios">Correios</option>
+                            <option value="jadlog">Jadlog</option>
+                            <option value="frota-propria">Frota Própria</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Campo 3: Comprovante de Entrega -->
@@ -97,8 +143,17 @@
                         Toque para tirar uma foto do comprovante
                     </div>
                     <div id="file-preview" class="file-preview hidden">
-                        <img id="preview-image" src="" alt="Preview do comprovante">
-                        <button type="button" id="remove-file" class="remove-file">Remover foto</button>
+                        <div class="preview-header">
+                            <span class="preview-label">Comprovante selecionado:</span>
+                        </div>
+                        <div class="preview-image-container">
+                            <img id="preview-image" src="" alt="Preview do comprovante">
+                        </div>
+                        <div class="preview-actions">
+                            <button type="button" id="remove-file" class="remove-file">
+                                🗑️ Remover foto
+                            </button>
+                        </div>
                     </div>
                 </div>
 

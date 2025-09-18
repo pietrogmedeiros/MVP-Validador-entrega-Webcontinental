@@ -9,7 +9,8 @@ const API_CONFIG = {
 };
 
 // DOM Elements - exact match with HTML
-let invoiceNumberInput, logisticsCompanySelect, deliveryProofInput;
+let invoiceNumberInput, deliveryTypeSelect, logisticsCompanySelect, deliveryProofInput;
+let clientNameInput, clientCpfInput, clientFields, logisticsFields;
 let submitBtn, deliveryForm, validationResult, invoiceFeedback;
 let filePreview, previewImage, removeFileBtn, submissionResult, newDeliveryBtn;
 let customerCpfSpan, deliveryCepSpan, productDescriptionSpan;
@@ -20,8 +21,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Get DOM elements
     invoiceNumberInput = document.getElementById('invoice-number');
+    deliveryTypeSelect = document.getElementById('delivery-type');
     logisticsCompanySelect = document.getElementById('logistics-company');
     deliveryProofInput = document.getElementById('delivery-proof');
+    clientNameInput = document.getElementById('client-name');
+    clientCpfInput = document.getElementById('client-cpf');
+    clientFields = document.getElementById('client-fields');
+    logisticsFields = document.getElementById('logistics-fields');
     submitBtn = document.getElementById('submit-btn');
     deliveryForm = document.getElementById('delivery-form');
     validationResult = document.getElementById('validation-result');
@@ -36,18 +42,69 @@ document.addEventListener('DOMContentLoaded', function() {
     productDescriptionSpan = document.getElementById('product-description');
 
     // Check if all elements exist
+    console.log('Checking elements...');
+    console.log('deliveryTypeSelect:', deliveryTypeSelect);
+    console.log('clientFields:', clientFields);
+    console.log('logisticsFields:', logisticsFields);
+    
     if (!invoiceNumberInput) {
         console.error('invoice-number element not found');
         return;
     }
     
+    if (!deliveryTypeSelect) {
+        console.error('delivery-type element not found - this is critical!');
+        return;
+    }
+    
     console.log('All DOM elements found, setting up event listeners...');
+    
+    // Initialize form state - remove required from conditional fields initially
+    initializeFormState();
     setupEventListeners();
 });
+
+// Initialize form state
+function initializeFormState() {
+    console.log('🔧 Initializing form state...');
+    
+    // Remove required attributes from conditional fields initially
+    if (clientNameInput) clientNameInput.removeAttribute('required');
+    if (clientCpfInput) clientCpfInput.removeAttribute('required');
+    if (logisticsCompanySelect) logisticsCompanySelect.removeAttribute('required');
+    
+    // Ensure conditional fields are hidden
+    if (clientFields) clientFields.classList.add('hidden');
+    if (logisticsFields) logisticsFields.classList.add('hidden');
+    
+    console.log('✅ Form state initialized');
+}
 
 function setupEventListeners() {
     // Invoice number validation
     invoiceNumberInput.addEventListener('input', debounce(validateInvoiceNumber, 500));
+    
+    // Delivery type selection
+    deliveryTypeSelect.addEventListener('change', function() {
+        handleDeliveryTypeChange();
+        updateSubmitButton();
+    });
+    
+    // CPF formatting for client
+    if (clientCpfInput) {
+        clientCpfInput.addEventListener('input', formatCPF);
+        clientCpfInput.addEventListener('input', updateSubmitButton);
+    }
+    
+    // Client name input
+    if (clientNameInput) {
+        clientNameInput.addEventListener('input', updateSubmitButton);
+    }
+    
+    // Logistics company selection
+    if (logisticsCompanySelect) {
+        logisticsCompanySelect.addEventListener('change', updateSubmitButton);
+    }
     
     // File handling
     deliveryProofInput.addEventListener('change', handleFileSelection);
@@ -81,12 +138,107 @@ function debounce(func, wait) {
     };
 }
 
+// Handle delivery type change
+function handleDeliveryTypeChange() {
+    console.log('🔄 handleDeliveryTypeChange called!');
+    const deliveryType = deliveryTypeSelect.value;
+    console.log('Selected delivery type:', deliveryType);
+    
+    // First, reset all conditional fields
+    resetConditionalFields();
+    
+    // Show appropriate fields with animation
+    setTimeout(() => {
+        if (deliveryType === 'cliente') {
+            console.log('📋 Showing CLIENT fields');
+            showClientFields();
+        } else if (deliveryType === 'transportadora') {
+            console.log('🚚 Showing LOGISTICS fields');
+            showLogisticsFields();
+        }
+        updateSubmitButton();
+    }, 50);
+}
+
+// Reset all conditional fields
+function resetConditionalFields() {
+    console.log('🔄 Resetting conditional fields...');
+    
+    // Hide all conditional fields
+    if (clientFields) {
+        clientFields.classList.add('hidden');
+        clientFields.classList.remove('show');
+    }
+    if (logisticsFields) {
+        logisticsFields.classList.add('hidden');
+        logisticsFields.classList.remove('show');
+    }
+    
+    // Remove all required attributes
+    if (clientNameInput) clientNameInput.removeAttribute('required');
+    if (clientCpfInput) clientCpfInput.removeAttribute('required');
+    if (logisticsCompanySelect) logisticsCompanySelect.removeAttribute('required');
+    
+    // Clear validation from hidden fields
+    clearFieldValidation(clientNameInput);
+    clearFieldValidation(clientCpfInput);
+    clearFieldValidation(logisticsCompanySelect);
+}
+
+// Show client fields
+function showClientFields() {
+    if (clientFields) {
+        clientFields.classList.remove('hidden');
+        clientFields.classList.add('show');
+        
+        // Set required attributes only for client fields
+        if (clientNameInput) clientNameInput.setAttribute('required', 'required');
+        if (clientCpfInput) clientCpfInput.setAttribute('required', 'required');
+        
+        console.log('✅ Client fields shown and required attributes set');
+    }
+}
+
+// Show logistics fields
+function showLogisticsFields() {
+    if (logisticsFields) {
+        logisticsFields.classList.remove('hidden');
+        logisticsFields.classList.add('show');
+        
+        // Set required attribute only for logistics field
+        if (logisticsCompanySelect) logisticsCompanySelect.setAttribute('required', 'required');
+        
+        console.log('✅ Logistics fields shown and required attributes set');
+    }
+}
+
+// Format CPF input
+function formatCPF(event) {
+    let value = event.target.value.replace(/\D/g, ''); // Remove non-digits
+    
+    if (value.length <= 11) {
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    
+    event.target.value = value;
+}
+
+// Clear field validation
+function clearFieldValidation(element) {
+    if (element && element.classList) {
+        element.classList.remove('error', 'success');
+    }
+}
+
 // Validate invoice number
 async function validateInvoiceNumber() {
     const invoiceNumber = invoiceNumberInput.value.trim();
     
     if (!invoiceNumber) {
         hideValidationResult();
+        clearInvoiceFeedback();
         updateSubmitButton();
         return;
     }
@@ -98,19 +250,32 @@ async function validateInvoiceNumber() {
         const data = await response.json();
         
         if (response.ok && data.status === 'validated') {
+            clearInvoiceFeedback();
             showValidationSuccess(data);
             showMessage('Nota fiscal encontrada!', 'success');
+            console.log('✅ Nota fiscal validada com sucesso');
         } else {
             hideValidationResult();
+            clearInvoiceFeedback();
             showMessage('Nota fiscal não encontrada.', 'error');
+            console.log('❌ Nota fiscal não encontrada');
         }
     } catch (error) {
         console.error('Validation error:', error);
         hideValidationResult();
+        clearInvoiceFeedback();
         showMessage('Erro ao validar nota fiscal.', 'error');
     }
     
     updateSubmitButton();
+}
+
+// Clear invoice feedback
+function clearInvoiceFeedback() {
+    if (invoiceFeedback) {
+        invoiceFeedback.innerHTML = '';
+        invoiceFeedback.style.display = 'none';
+    }
 }
 
 function showValidationSuccess(data) {
@@ -136,6 +301,7 @@ function handleFileSelection(event) {
     
     if (!file) {
         hideFilePreview();
+        updateSubmitButton();
         return;
     }
     
@@ -143,12 +309,14 @@ function handleFileSelection(event) {
     if (!file.type.startsWith('image/')) {
         showMessage('Por favor, selecione apenas arquivos de imagem.', 'error');
         event.target.value = '';
+        updateSubmitButton();
         return;
     }
     
     // Removed size validation for testing
     
     showFilePreview(file);
+    updateSubmitButton();
 }
 
 function showFilePreview(file) {
@@ -184,13 +352,40 @@ async function handleFormSubmission(event) {
     event.preventDefault();
     
     const invoiceNumber = invoiceNumberInput?.value.trim();
-    const logisticsCompany = logisticsCompanySelect?.value;
+    const deliveryType = deliveryTypeSelect?.value;
     const deliveryProofFile = deliveryProofInput?.files[0];
     
-    // Validate required fields
-    if (!invoiceNumber || !logisticsCompany || !deliveryProofFile) {
+    // Validate basic required fields
+    if (!invoiceNumber || !deliveryType || !deliveryProofFile) {
         showMessage('Por favor, preencha todos os campos obrigatórios.', 'error');
         return;
+    }
+    
+    let logisticsCompany = '';
+    let clientName = '';
+    let clientCpf = '';
+    
+    // Validate conditional fields based on delivery type
+    if (deliveryType === 'transportadora') {
+        logisticsCompany = logisticsCompanySelect?.value;
+        if (!logisticsCompany) {
+            showMessage('Por favor, selecione a empresa de logística.', 'error');
+            return;
+        }
+    } else if (deliveryType === 'cliente') {
+        clientName = clientNameInput?.value.trim();
+        clientCpf = clientCpfInput?.value.trim();
+        
+        if (!clientName || !clientCpf) {
+            showMessage('Por favor, preencha o nome e CPF do cliente.', 'error');
+            return;
+        }
+        
+        // Validate CPF format (basic validation)
+        if (clientCpf.replace(/\D/g, '').length !== 11) {
+            showMessage('Por favor, digite um CPF válido.', 'error');
+            return;
+        }
     }
     
     // Show loading state
@@ -204,7 +399,6 @@ async function handleFormSubmission(event) {
         // Prepare delivery data
         const deliveryData = {
             invoiceNumber,
-            logisticsCompany,
             deliveryProof: {
                 filename: deliveryProofFile.name,
                 data: deliveryProofBase64,
@@ -212,6 +406,22 @@ async function handleFormSubmission(event) {
                 size: deliveryProofFile.size
             }
         };
+        
+        // Add delivery type and conditional fields
+        deliveryData.deliveryType = deliveryType;
+        
+        if (deliveryType === 'transportadora') {
+            deliveryData.logisticsCompany = logisticsCompany;
+        } else if (deliveryType === 'cliente') {
+            // For clients, use a default logistics company and add client info
+            deliveryData.logisticsCompany = 'cliente-direto';
+            deliveryData.clientInfo = {
+                name: clientName,
+                cpf: clientCpf.replace(/\D/g, '') // Store only numbers
+            };
+        }
+        
+        console.log('📤 Sending payload:', deliveryData);
         
         // Submit to API
         const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.delivery}`, {
@@ -261,6 +471,22 @@ function resetForm() {
         deliveryForm.reset();
         deliveryForm.style.display = 'block';
     }
+    
+    // Hide all conditional fields
+    if (clientFields) {
+        clientFields.classList.add('hidden');
+        clientFields.classList.remove('show');
+    }
+    if (logisticsFields) {
+        logisticsFields.classList.add('hidden');
+        logisticsFields.classList.remove('show');
+    }
+    
+    // Clear required attributes
+    if (clientNameInput) clientNameInput.removeAttribute('required');
+    if (clientCpfInput) clientCpfInput.removeAttribute('required');
+    if (logisticsCompanySelect) logisticsCompanySelect.removeAttribute('required');
+    
     if (submissionResult) submissionResult.classList.add('hidden');
     hideValidationResult();
     hideFilePreview();
@@ -271,14 +497,49 @@ function resetForm() {
 function updateSubmitButton() {
     if (!submitBtn) return;
     
+    console.log('🔄 Updating submit button...');
+    
     const invoiceNumber = invoiceNumberInput?.value.trim();
-    const logisticsCompany = logisticsCompanySelect?.value;
+    const deliveryType = deliveryTypeSelect?.value;
     const deliveryProofFile = deliveryProofInput?.files[0];
     const hasValidInvoice = !validationResult?.classList.contains('hidden');
     
-    const isValid = invoiceNumber && logisticsCompany && deliveryProofFile && hasValidInvoice;
+    console.log('📋 Form state check:');
+    console.log('  - Invoice number:', invoiceNumber);
+    console.log('  - Delivery type:', deliveryType);
+    console.log('  - Has file:', !!deliveryProofFile);
+    console.log('  - Has valid invoice:', hasValidInvoice);
+    
+    let typeFieldsValid = false;
+    if (deliveryType === 'transportadora') {
+        const logistics = logisticsCompanySelect?.value;
+        typeFieldsValid = !!logistics;
+        console.log('  - Logistics company:', logistics, '| Valid:', typeFieldsValid);
+    } else if (deliveryType === 'cliente') {
+        const clientName = clientNameInput?.value.trim();
+        const clientCpf = clientCpfInput?.value.trim();
+        const cpfValid = clientCpf && clientCpf.replace(/\D/g, '').length === 11;
+        typeFieldsValid = clientName && cpfValid;
+        console.log('  - Client name:', clientName);
+        console.log('  - Client CPF:', clientCpf, '| Valid:', cpfValid);
+        console.log('  - Type fields valid:', typeFieldsValid);
+    }
+    
+    const isValid = invoiceNumber && deliveryType && typeFieldsValid && deliveryProofFile && hasValidInvoice;
+    
+    console.log('🎯 Final validation:', isValid);
     
     submitBtn.disabled = !isValid;
+    
+    if (isValid) {
+        console.log('✅ Submit button ENABLED');
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+    } else {
+        console.log('❌ Submit button DISABLED');
+        submitBtn.style.opacity = '0.6';
+        submitBtn.style.cursor = 'not-allowed';
+    }
 }
 
 // Utility functions

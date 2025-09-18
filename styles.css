@@ -162,31 +162,59 @@ main {
 
 /* File preview */
 .file-preview {
-    margin-top: 16px;
+    margin-top: 20px;
+    padding: 16px;
     text-align: center;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+}
+
+.preview-header {
+    margin-bottom: 12px;
+}
+
+.preview-label {
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.preview-image-container {
+    margin-bottom: 8px;
 }
 
 .file-preview img {
     max-width: 100%;
-    max-height: 200px;
+    max-height: 220px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.preview-actions {
+    margin-top: 12px;
 }
 
 .remove-file {
-    margin-top: 12px;
-    padding: 8px 16px;
+    margin: 16px auto 0;
+    padding: 10px 20px;
     background: #e74c3c;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
-    transition: background 0.3s ease;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: block;
+    min-width: 140px;
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
 }
 
 .remove-file:hover {
     background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
 }
 
 /* Field feedback */
@@ -358,6 +386,26 @@ footer {
     display: none !important;
 }
 
+/* Campos condicionais */
+.conditional-fields {
+    transition: all 0.3s ease-in-out;
+}
+
+.conditional-fields.show {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .text-center {
     text-align: center;
 }
@@ -385,6 +433,25 @@ footer {
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Responsive design - Mobile */
+@media (max-width: 767px) {
+    .file-preview {
+        padding: 12px;
+        margin-top: 16px;
+    }
+    
+    .file-preview img {
+        max-height: 180px;
+    }
+    
+    .remove-file {
+        margin: 12px auto 0;
+        padding: 8px 16px;
+        font-size: 13px;
+        min-width: 120px;
     }
 }
 
