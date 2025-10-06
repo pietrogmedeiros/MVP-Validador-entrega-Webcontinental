@@ -611,3 +611,214 @@ footer {
     margin: 8px 0 0 0;
     font-weight: 500;
 }
+
+/* Cancelled Delivery Popup */
+.cancelled-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.cancelled-popup.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.cancelled-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    transform: scale(1);
+    animation: cancelledPopupAppear 0.3s ease-out;
+}
+
+.cancelled-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+    animation: shake 0.5s ease-in-out;
+}
+
+.cancelled-content h2 {
+    color: #dc2626;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.cancelled-content p {
+    color: #374151;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.cancelled-content p strong {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.cancelled-close-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+.cancelled-close-btn:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Loading Popup */
+.loading-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 58, 123, 0.3);
+    backdrop-filter: blur(2px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.loading-popup.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.loading-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    transform: scale(1);
+    animation: popupAppear 0.3s ease-out;
+}
+
+.loading-animation {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-svg {
+    width: 100px;
+    height: 100px;
+    animation: loadingPulse 2s ease-in-out infinite;
+}
+
+.loading-text {
+    color: #1A3A7B;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@keyframes popupAppear {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes loadingPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+}
+
+@keyframes cancelledPopupAppear {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+    .cancelled-content {
+        padding: 30px 20px;
+        max-width: 320px;
+        margin: 20px;
+    }
+    
+    .cancelled-icon {
+        font-size: 50px;
+    }
+    
+    .cancelled-content h2 {
+        font-size: 20px;
+    }
+    
+    .cancelled-content p {
+        font-size: 14px;
+    }
+    
+    .cancelled-close-btn {
+        padding: 10px 25px;
+        font-size: 14px;
+    }
+}

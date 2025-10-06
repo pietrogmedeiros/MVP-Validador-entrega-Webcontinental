@@ -13,7 +13,7 @@ const sampleDeliveryOrders = [
         productValue: 2499.99,
         customerName: 'João Silva Santos',
         deliveryAddress: 'Av. Paulista, 1578 - Bela Vista, São Paulo - SP',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-15T10:30:00Z',
         weight: '0.174kg',
         dimensions: '14.6 x 7.06 x 0.76 cm'
@@ -26,7 +26,7 @@ const sampleDeliveryOrders = [
         productValue: 3299.00,
         customerName: 'Maria Oliveira Costa',
         deliveryAddress: 'Rua Augusta, 2690 - Jardim Paulista, São Paulo - SP',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-14T14:22:00Z',
         weight: '1.83kg',
         dimensions: '35.8 x 23.6 x 1.99 cm'
@@ -39,7 +39,7 @@ const sampleDeliveryOrders = [
         productValue: 2899.90,
         customerName: 'Carlos Roberto Lima',
         deliveryAddress: 'Av. Atlântica, 1702 - Copacabana, Rio de Janeiro - RJ',
-        status: 'pending_delivery',
+        status: 'Cancelado',
         createdAt: '2025-09-13T09:15:00Z',
         weight: '15.9kg',
         dimensions: '124.3 x 77.8 x 8.6 cm'
@@ -52,7 +52,7 @@ const sampleDeliveryOrders = [
         productValue: 1299.99,
         customerName: 'Ana Paula Ferreira',
         deliveryAddress: 'Av. Afonso Pena, 1270 - Centro, Belo Horizonte - MG',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-12T16:45:00Z',
         weight: '0.254kg',
         dimensions: '25.4 x 22.0 x 8.9 cm'
@@ -65,7 +65,7 @@ const sampleDeliveryOrders = [
         productValue: 3799.00,
         customerName: 'Pedro Henrique Souza',
         deliveryAddress: 'SCS Quadra 02, Bloco C - Asa Sul, Brasília - DF',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-11T11:30:00Z',
         weight: '0.532kg',
         dimensions: '13.1 x 10.2 x 7.6 cm'
@@ -78,7 +78,7 @@ const sampleDeliveryOrders = [
         productValue: 4199.00,
         customerName: 'Fernanda Castro Alves',
         deliveryAddress: 'Rua dos Andradas, 1001 - Centro Histórico, Porto Alegre - RS',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-10T13:20:00Z',
         weight: '0.458kg',
         dimensions: '24.76 x 17.85 x 0.61 cm'
@@ -91,7 +91,7 @@ const sampleDeliveryOrders = [
         productValue: 4299.99,
         customerName: 'Lucas Matheus Rocha',
         deliveryAddress: 'Av. Cândido de Abreu, 817 - Centro Cívico, Curitiba - PR',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-09T08:55:00Z',
         weight: '3.9kg',
         dimensions: '39.0 x 26.0 x 10.4 cm'
@@ -104,7 +104,7 @@ const sampleDeliveryOrders = [
         productValue: 899.90,
         customerName: 'Juliana Santos Barbosa',
         deliveryAddress: 'Av. Tancredo Neves, 2915 - Caminho das Árvores, Salvador - BA',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-08T15:10:00Z',
         weight: '4.1kg',
         dimensions: '34.2 x 17.2 x 31.6 cm'
@@ -117,7 +117,7 @@ const sampleDeliveryOrders = [
         productValue: 1499.99,
         customerName: 'Rafael Augusto Dias',
         deliveryAddress: 'Rua Felipe Schmidt, 390 - Centro, Florianópolis - SC',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-07T12:40:00Z',
         weight: '3.4kg',
         dimensions: '54.0 x 40.0 x 21.8 cm'
@@ -130,7 +130,7 @@ const sampleDeliveryOrders = [
         productValue: 1899.00,
         customerName: 'Camila Rodrigues Melo',
         deliveryAddress: 'Av. Dom Luís, 1200 - Aldeota, Fortaleza - CE',
-        status: 'pending_delivery',
+        status: 'Saiu para entrega',
         createdAt: '2025-09-06T10:25:00Z',
         weight: '8.5kg',
         dimensions: '79.8 x 54.5 x 32.0 cm'

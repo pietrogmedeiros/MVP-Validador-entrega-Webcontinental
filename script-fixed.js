@@ -82,7 +82,12 @@ function initializeFormState() {
 
 function setupEventListeners() {
     // Invoice number validation
-    invoiceNumberInput.addEventListener('input', debounce(validateInvoiceNumber, 500));
+    invoiceNumberInput.addEventListener('blur', validateInvoiceNumber);
+    invoiceNumberInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            validateInvoiceNumber();
+        }
+    });
     
     // Delivery type selection
     deliveryTypeSelect.addEventListener('change', function() {
@@ -244,7 +249,8 @@ async function validateInvoiceNumber() {
     }
 
     try {
-        showLoading(invoiceFeedback, 'Validando nota fiscal...');
+        // Mostrar popup de loading
+        showLoadingPopup();
         
         const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.validate}/${invoiceNumber}`);
         const data = await response.json();
@@ -265,9 +271,32 @@ async function validateInvoiceNumber() {
         hideValidationResult();
         clearInvoiceFeedback();
         showMessage('Erro ao validar nota fiscal.', 'error');
+    } finally {
+        // Esconder popup de loading sempre (após sucesso ou erro)
+        setTimeout(() => {
+            hideLoadingPopup();
+        }, 500); // Pequeno delay para melhor UX
     }
     
     updateSubmitButton();
+}
+
+// Função para mostrar o popup de loading
+function showLoadingPopup() {
+    const popup = document.getElementById('loading-popup');
+    if (popup) {
+        popup.classList.remove('hidden');
+        console.log('📱 Showing loading popup...');
+    }
+}
+
+// Função para esconder o popup de loading
+function hideLoadingPopup() {
+    const popup = document.getElementById('loading-popup');
+    if (popup) {
+        popup.classList.add('hidden');
+        console.log('📱 Hiding loading popup...');
+    }
 }
 
 // Clear invoice feedback
@@ -283,9 +312,61 @@ function showValidationSuccess(data) {
     if (deliveryCepSpan) deliveryCepSpan.textContent = data.deliveryCEP || 'N/A';
     if (productDescriptionSpan) productDescriptionSpan.textContent = data.productDescription || 'N/A';
     
+    // Verificar se a entrega foi cancelada
+    if (data.deliveryStatus === 'Cancelado') {
+        showCancelledDeliveryPopup(data.invoiceNumber);
+        return; // Não mostra o resultado da validação se foi cancelado
+    }
+    
     if (validationResult) {
         validationResult.classList.remove('hidden');
     }
+}
+
+// Função para mostrar popup de entrega cancelada
+function showCancelledDeliveryPopup(invoiceNumber) {
+    console.log('🚫 Entrega cancelada detectada para NF:', invoiceNumber);
+    
+    // Criar popup se não existir
+    let popup = document.getElementById('cancelled-popup');
+    if (!popup) {
+        popup = document.createElement('div');
+        popup.id = 'cancelled-popup';
+        popup.className = 'cancelled-popup';
+        popup.innerHTML = `
+            <div class="cancelled-content">
+                <div class="cancelled-icon">⚠️</div>
+                <h2>Entrega Cancelada</h2>
+                <p>A entrega da nota fiscal <strong>${invoiceNumber}</strong> foi <strong>CANCELADA</strong>.</p>
+                <p>Por favor, não realize a entrega.</p>
+                <button onclick="closeCancelledPopup()" class="cancelled-close-btn">Fechar</button>
+            </div>
+        `;
+        document.body.appendChild(popup);
+    } else {
+        // Atualizar conteúdo se já existir
+        popup.querySelector('strong').textContent = invoiceNumber;
+    }
+    
+    popup.classList.remove('hidden');
+    popup.style.display = 'flex';
+}
+
+// Função para fechar popup de cancelamento
+function closeCancelledPopup() {
+    const popup = document.getElementById('cancelled-popup');
+    if (popup) {
+        popup.classList.add('hidden');
+        popup.style.display = 'none';
+    }
+    
+    // Limpar o campo de nota fiscal para nova tentativa
+    if (invoiceNumberInput) {
+        invoiceNumberInput.value = '';
+        invoiceNumberInput.focus();
+    }
+    hideValidationResult();
+    updateSubmitButton();
 }
 
 function hideValidationResult() {

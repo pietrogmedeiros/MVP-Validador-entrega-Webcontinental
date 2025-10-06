@@ -131,12 +131,13 @@ exports.handler = async (event) => {
                     });
                 }
                 
-                // Return masked data for security
+                // Return masked data for security and include delivery status
                 const responseData = {
                     invoiceNumber: result.Item.invoiceNumber,
                     customerCPF: formatCpfForDisplay(result.Item.customerCPF),
                     deliveryCEP: result.Item.deliveryCEP,
                     productDescription: result.Item.productDescription,
+                    deliveryStatus: result.Item.status, // Status da entrega
                     status: 'validated',
                     validatedAt: new Date().toISOString()
                 };
