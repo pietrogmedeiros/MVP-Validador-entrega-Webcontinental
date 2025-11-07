@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Download</title>
+</head>
+<body>
+    <h1>Teste de Download</h1>
+    <button id="testDownload">Testar Download NF005678901</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testDownload').addEventListener('click', async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testando...';
+            
+            try {
+                // Primeiro, teste direto da URL
+                const url = 'https://mw8t3gzzo9.execute-api.us-east-2.amazonaws.com/prod/proofs/NF005678901';
+                
+                resultDiv.innerHTML += '<br>Testando acesso à URL: ' + url;
+                
+                // Criar link direto
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'comprovante-test.jpg';
+                link.target = '_blank';
+                link.textContent = 'Clique aqui para baixar';
+                
+                resultDiv.innerHTML += '<br>';
+                resultDiv.appendChild(link);
+                
+                // Tentar também via fetch
+                fetch(url)
+                    .then(response => {
+                        resultDiv.innerHTML += '<br>Status: ' + response.status;
+                        resultDiv.innerHTML += '<br>Headers: ' + JSON.stringify([...response.headers.entries()]);
+                        
+                        if (response.ok) {
+                            return response.blob();
+                        } else {
+                            throw new Error('Response not ok: ' + response.status);
+                        }
+                    })
+                    .then(blob => {
+                        resultDiv.innerHTML += '<br>Blob size: ' + blob.size;
+                        resultDiv.innerHTML += '<br>Blob type: ' + blob.type;
+                        
+                        // Criar URL do blob e download
+                        const blobUrl = URL.createObjectURL(blob);
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = blobUrl;
+                        downloadLink.download = 'comprovante-via-fetch.jpg';
+                        downloadLink.textContent = 'Download via Fetch';
+                        downloadLink.click();
+                        
+                        resultDiv.innerHTML += '<br>Download iniciado via fetch!';
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML += '<br>Erro: ' + error.message;
+                    });
+                
+            } catch (error) {
+                resultDiv.innerHTML += '<br>Erro geral: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
