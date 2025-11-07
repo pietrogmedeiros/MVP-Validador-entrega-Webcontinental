@@ -723,7 +723,12 @@ function initBarcodeScanner() {
             console.log("Barcode detected:", code);
             
             // Extract only numbers from the barcode
-            const numbers = code.replace(/\D/g, '');
+            let numbers = code.replace(/\D/g, '');
+            
+            // Get the last 9 digits (formato NF: NF + 9 dígitos)
+            if (numbers.length >= 9) {
+                numbers = numbers.slice(-9);
+            }
             
             if (numbers.length >= 8) {
                 // Add "NF" prefix to the numbers
