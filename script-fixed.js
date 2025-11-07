@@ -62,6 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize form state - remove required from conditional fields initially
     initializeFormState();
     setupEventListeners();
+    
+    // Initialize barcode scanner
+    initBarcodeScanner();
 });
 
 // Initialize form state
@@ -654,6 +657,87 @@ function showLoading(element, text) {
     if (element) {
         element.innerHTML = `<span class="loading">${text}</span>`;
         element.style.display = 'block';
+    }
+}
+
+// Barcode Scanner Functionality
+function initBarcodeScanner() {
+    const scanButton = document.getElementById('scan-button');
+    const scannerModal = document.getElementById('scanner-modal');
+    const closeScanner = document.getElementById('close-scanner');
+    const invoiceInput = document.getElementById('invoice-number');
+
+    if (!scanButton || !scannerModal) {
+        console.log('Scanner elements not found');
+        return;
+    }
+
+    scanButton.addEventListener('click', function() {
+        scannerModal.classList.add('active');
+        startScanner();
+    });
+
+    closeScanner.addEventListener('click', function() {
+        stopScanner();
+        scannerModal.classList.remove('active');
+    });
+
+    function startScanner() {
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner-viewport'),
+                constraints: {
+                    width: 640,
+                    height: 480,
+                    facingMode: "environment"
+                },
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "code_39_reader",
+                    "code_39_vin_reader",
+                    "codabar_reader",
+                    "upc_reader",
+                    "upc_e_reader",
+                    "i2of5_reader"
+                ]
+            },
+        }, function(err) {
+            if (err) {
+                console.error(err);
+                alert('Erro ao iniciar câmera. Verifique as permissões.');
+                scannerModal.classList.remove('active');
+                return;
+            }
+            console.log("Scanner initialized");
+            Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+            const code = result.codeResult.code;
+            console.log("Barcode detected:", code);
+            
+            // Extract only numbers from the barcode
+            const numbers = code.replace(/\D/g, '');
+            
+            if (numbers.length >= 8) {
+                invoiceInput.value = numbers;
+                stopScanner();
+                scannerModal.classList.remove('active');
+                
+                // Trigger validation
+                invoiceInput.dispatchEvent(new Event('blur'));
+            }
+        });
+    }
+
+    function stopScanner() {
+        Quagga.stop();
     }
 }
 
