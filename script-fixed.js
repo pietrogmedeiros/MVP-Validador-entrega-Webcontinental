@@ -726,7 +726,8 @@ function initBarcodeScanner() {
             const numbers = code.replace(/\D/g, '');
             
             if (numbers.length >= 8) {
-                invoiceInput.value = numbers;
+                // Add "NF" prefix to the numbers
+                invoiceInput.value = 'NF' + numbers;
                 stopScanner();
                 scannerModal.classList.remove('active');
                 
