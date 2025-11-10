@@ -293,14 +293,29 @@ function updateStats() {
 
 // Renderizar tabela
 function renderTable() {
+    // Verificar se elementos existem
+    if (!deliveriesTbody) {
+        console.error('deliveriesTbody não encontrado!');
+        deliveriesTbody = document.getElementById('deliveries-tbody');
+    }
+    if (!deliveriesTable) {
+        console.error('deliveriesTable não encontrada!');
+        deliveriesTable = document.getElementById('deliveries-table');
+    }
+    
     if (filteredDeliveries.length === 0) {
-        deliveriesTable.style.display = 'none';
-        emptyState.classList.remove('hidden');
+        if (deliveriesTable) deliveriesTable.style.display = 'none';
+        if (emptyState) emptyState.classList.remove('hidden');
         return;
     }
     
-    deliveriesTable.style.display = 'table';
-    emptyState.classList.add('hidden');
+    if (deliveriesTable) deliveriesTable.style.display = 'table';
+    if (emptyState) emptyState.classList.add('hidden');
+    
+    if (!deliveriesTbody) {
+        console.error('Não conseguiu encontrar deliveriesTbody');
+        return;
+    }
     
     deliveriesTbody.innerHTML = filteredDeliveries.map(delivery => {
         const statusClass = delivery.status.toLowerCase().replace(/\s+/g, '-');
