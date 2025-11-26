@@ -13,20 +13,29 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Buscar NF na tabela nfs_storage
 export async function searchNF(invoiceNumber) {
     try {
+        console.log('🔍 Buscando NF:', invoiceNumber);
+        
         const { data, error } = await supabase
             .from('nfs_storage')
             .select('*')
             .eq('numero_nfe', invoiceNumber.toUpperCase())
             .single()
 
-        if (error && error.code !== 'PGRST116') {
-            throw error
+        if (error) {
+            console.error('❌ Erro na query:', error);
+            // Retornar null se não encontrado (código 406 ou PGRST116)
+            if (error.code === 'PGRST116' || error.status === 406) {
+                console.log('ℹ️ NF não encontrada');
+                return null;
+            }
+            throw error;
         }
 
-        return data
+        console.log('✅ NF encontrada:', data);
+        return data;
     } catch (error) {
-        console.error('Erro ao buscar NF:', error)
-        throw error
+        console.error('Erro ao buscar NF:', error);
+        return null;
     }
 }
 
