@@ -1,3 +1,6 @@
+// Import Supabase
+import { searchNF, saveDelivery, uploadProof } from './supabase.js'
+
 // API Configuration - Always use HTTPS
 const API_CONFIG = {
     baseURL: 'https://mw8t3gzzo9.execute-api.us-east-2.amazonaws.com/prod',
@@ -255,25 +258,42 @@ async function validateInvoiceNumber() {
         // Mostrar popup de loading
         showLoadingPopup();
         
-        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.validate}/${invoiceNumber}`);
-        const data = await response.json();
+        // Buscar NF no Supabase
+        const nfData = await searchNF(invoiceNumber);
         
-        if (response.ok && data.status === 'validated') {
+        if (nfData) {
+            // NF encontrada no Supabase
             clearInvoiceFeedback();
-            showValidationSuccess(data);
+            
+            // Salvar dados para uso posterior
+            currentValidatedOrder = {
+                invoiceNumber: invoiceNumber.toUpperCase(),
+                ...nfData
+            };
+            
+            // Mostrar resultado
+            invoiceNumberInput.className = 'form-input valid';
+            validationResult.classList.remove('hidden', 'error');
+            showFeedback(invoiceFeedback, 'Nota Fiscal validada com sucesso!', 'success');
             showMessage('Nota fiscal encontrada!', 'success');
-            console.log('✅ Nota fiscal validada com sucesso');
+            console.log('✅ Nota fiscal validada no Supabase');
         } else {
+            // NF não encontrada
             hideValidationResult();
             clearInvoiceFeedback();
+            invoiceNumberInput.className = 'form-input invalid';
+            showFeedback(invoiceFeedback, 'Nota Fiscal não encontrada', 'error');
             showMessage('Nota fiscal não encontrada.', 'error');
-            console.log('❌ Nota fiscal não encontrada');
+            console.log('❌ Nota fiscal não encontrada no Supabase');
+            currentValidatedOrder = null;
         }
     } catch (error) {
         console.error('Validation error:', error);
         hideValidationResult();
         clearInvoiceFeedback();
+        invoiceNumberInput.className = 'form-input invalid';
         showMessage('Erro ao validar nota fiscal.', 'error');
+        currentValidatedOrder = null;
     } finally {
         // Esconder popup de loading sempre (após sucesso ou erro)
         setTimeout(() => {
@@ -477,57 +497,27 @@ async function handleFormSubmission(event) {
     submitBtn.textContent = 'Enviando...';
     
     try {
-        // Convert image to base64
-        const deliveryProofBase64 = await fileToBase64(deliveryProofFile);
+        // Upload comprovante para Supabase Storage
+        console.log('📸 Fazendo upload do comprovante...');
+        const proofUrl = await uploadProof(invoiceNumber, deliveryProofFile);
         
-        // Prepare delivery data
-        const deliveryData = {
+        // Salvar entrega no Supabase
+        const deliveryRecord = await saveDelivery({
             invoiceNumber,
-            deliveryProof: {
-                filename: deliveryProofFile.name,
-                data: deliveryProofBase64,
-                type: deliveryProofFile.type,
-                size: deliveryProofFile.size
-            }
-        };
-        
-        // Add delivery type and conditional fields
-        deliveryData.deliveryType = deliveryType;
-        
-        if (deliveryType === 'transportadora') {
-            deliveryData.logisticsCompany = logisticsCompany;
-        } else if (deliveryType === 'cliente') {
-            // For clients, use a default logistics company and add client info
-            deliveryData.logisticsCompany = 'cliente-direto';
-            deliveryData.clientInfo = {
-                name: clientName,
-                cpf: clientCpf.replace(/\D/g, '') // Store only numbers
-            };
-        }
-        
-        console.log('📤 Sending payload:', deliveryData);
-        
-        // Submit to API
-        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.delivery}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(deliveryData)
+            deliveryType,
+            logisticsCompany: deliveryType === 'transportadora' ? logisticsCompany : null,
+            clientName: deliveryType === 'cliente' ? clientName : null,
+            clientCpf: deliveryType === 'cliente' ? clientCpf : null,
+            proofUrl
         });
         
-        const result = await response.json();
-        
-        if (response.ok) {
-            showSuccessResult();
-            showMessage('Entrega registrada com sucesso!', 'success');
-        } else {
-            throw new Error(result.error || 'Erro ao registrar entrega');
-        }
+        console.log('✅ Entrega salva no Supabase:', deliveryRecord);
+        showSuccessResult();
+        showMessage('Entrega registrada com sucesso!', 'success');
         
     } catch (error) {
         console.error('Submit error:', error);
-        showMessage(error.message || 'Erro ao enviar os dados. Tente novamente.', 'error');
+        showMessage(error.message || 'Erro ao registrar entrega. Tente novamente.', 'error');
     } finally {
         // Restore button state
         submitBtn.disabled = false;
