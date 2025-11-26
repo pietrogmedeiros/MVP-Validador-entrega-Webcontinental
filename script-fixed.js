@@ -18,6 +18,9 @@ let submitBtn, deliveryForm, validationResult, invoiceFeedback;
 let filePreview, previewImage, removeFileBtn, submissionResult, newDeliveryBtn;
 let customerCpfSpan, deliveryCepSpan, productDescriptionSpan;
 
+// Global state
+let currentValidatedOrder = null;
+
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing...');
@@ -343,6 +346,14 @@ function clearInvoiceFeedback() {
         invoiceFeedback.innerHTML = '';
         invoiceFeedback.style.display = 'none';
     }
+}
+
+function showFeedback(element, message, type) {
+    if (!element) return;
+    
+    element.innerHTML = message;
+    element.style.display = 'block';
+    element.className = `feedback ${type}`;
 }
 
 function showValidationSuccess(data) {

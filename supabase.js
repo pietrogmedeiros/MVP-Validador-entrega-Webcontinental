@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Usar as variáveis de ambiente do Vite
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://pnbsjmwatuhyijsuyjqe.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuYnNqbXdhdHVoeWlqc3V5anFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTA2ODEsImV4cCI6MjA3Njg4NjY4MX0.DWETpGIUySVrooL81Ho-oM2mDS1ZqD3dDEoAqvLst7g'
+
+console.log('🔌 Inicializando Supabase...')
+console.log('URL:', supabaseUrl ? '✅ Carregada' : '❌ Não encontrada')
+console.log('Chave:', supabaseAnonKey ? '✅ Carregada' : '❌ Não encontrada')
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
