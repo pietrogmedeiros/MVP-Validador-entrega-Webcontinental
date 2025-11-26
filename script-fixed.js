@@ -754,14 +754,20 @@ function initBarcodeScanner() {
             // Extract only numbers from the barcode
             let numbers = code.replace(/\D/g, '');
             
-            // Get the last 9 digits (formato NF: NF + 9 dígitos)
+            // Remove "NF" prefix if it exists (some barcodes may have it)
+            if (code.toUpperCase().startsWith('NF')) {
+                numbers = code.substring(2).replace(/\D/g, '');
+            }
+            
+            // Get the last 9 digits (formato NF: 9 dígitos)
             if (numbers.length >= 9) {
                 numbers = numbers.slice(-9);
             }
             
             if (numbers.length >= 8) {
-                // Add "NF" prefix to the numbers
-                invoiceInput.value = 'NF' + numbers;
+                // Store only the numbers without NF prefix
+                invoiceInput.value = numbers;
+                console.log("Invoice number extracted:", numbers);
                 stopScanner();
                 scannerModal.classList.remove('active');
                 
