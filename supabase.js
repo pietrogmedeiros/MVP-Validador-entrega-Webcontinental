@@ -11,7 +11,7 @@ export async function searchNF(invoiceNumber) {
         const { data, error } = await supabase
             .from('nfs_storage')
             .select('*')
-            .eq('numero_nf', invoiceNumber.toUpperCase())
+            .eq('numero_nfe', invoiceNumber.toUpperCase())
             .single()
 
         if (error && error.code !== 'PGRST116') {
@@ -31,7 +31,7 @@ export async function saveDelivery(deliveryData) {
         const { data, error } = await supabase
             .from('delivery_output')
             .insert([{
-                numero_nf: deliveryData.invoiceNumber,
+                numero_nfe: deliveryData.invoiceNumber,
                 tipo_entrega: deliveryData.deliveryType,
                 empresa_logistica: deliveryData.logisticsCompany || null,
                 nome_cliente: deliveryData.clientName || null,
@@ -56,28 +56,39 @@ export async function saveDelivery(deliveryData) {
 // Upload de comprovante para o bucket
 export async function uploadProof(invoiceNumber, file) {
     try {
-        const fileName = `${invoiceNumber.toUpperCase()}.jpg`
+        // Gerar nome único para o arquivo com timestamp
+        const timestamp = new Date().getTime();
+        const extension = file.type.includes('image') ? 'jpg' : 'jpg';
+        const fileName = `${invoiceNumber.toUpperCase()}_${timestamp}.${extension}`;
+        
+        // Criar pasta com data para organizar os comprovantes
+        const today = new Date().toISOString().split('T')[0];
+        const filePath = `comprovantes/${today}/${fileName}`;
+
+        // Upload do arquivo para o bucket 'comprovantes_entregas'
         const { data, error } = await supabase
             .storage
             .from('comprovantes_entregas')
-            .upload(fileName, file, {
+            .upload(filePath, file, {
                 cacheControl: '3600',
-                upsert: true
-            })
+                upsert: false,
+                contentType: file.type || 'image/jpeg'
+            });
 
         if (error) {
-            throw error
+            throw error;
         }
 
         // Retornar URL pública do arquivo
         const { data: { publicUrl } } = supabase
             .storage
             .from('comprovantes_entregas')
-            .getPublicUrl(fileName)
+            .getPublicUrl(filePath);
 
-        return publicUrl
+        console.log('✅ Comprovante salvo no bucket:', publicUrl);
+        return publicUrl;
     } catch (error) {
-        console.error('Erro ao fazer upload:', error)
-        throw error
+        console.error('Erro ao fazer upload do comprovante:', error);
+        throw error;
     }
 }

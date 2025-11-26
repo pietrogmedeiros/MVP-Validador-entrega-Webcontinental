@@ -262,21 +262,36 @@ async function validateInvoiceNumber() {
         const nfData = await searchNF(invoiceNumber);
         
         if (nfData) {
-            // NF encontrada no Supabase
-            clearInvoiceFeedback();
+            // Verificar se a NF está cancelada
+            const statusPedido = nfData.status_pedido ? nfData.status_pedido.toUpperCase() : '';
+            const isCanceled = statusPedido === 'CANC' || statusPedido === 'CANCELADO';
             
-            // Salvar dados para uso posterior
-            currentValidatedOrder = {
-                invoiceNumber: invoiceNumber.toUpperCase(),
-                ...nfData
-            };
-            
-            // Mostrar resultado
-            invoiceNumberInput.className = 'form-input valid';
-            validationResult.classList.remove('hidden', 'error');
-            showFeedback(invoiceFeedback, 'Nota Fiscal validada com sucesso!', 'success');
-            showMessage('Nota fiscal encontrada!', 'success');
-            console.log('✅ Nota fiscal validada no Supabase');
+            if (isCanceled) {
+                // NF cancelada - não permitir entrega
+                invoiceNumberInput.className = 'form-input invalid';
+                validationResult.classList.add('error');
+                validationResult.classList.remove('hidden');
+                showFeedback(invoiceFeedback, '⚠️ ATENÇÃO: Esta Nota Fiscal está CANCELADA. Não é possível fazer a entrega!', 'error');
+                showMessage('Nota fiscal cancelada! Entrega não permitida.', 'error');
+                console.log('❌ Nota fiscal cancelada:', statusPedido);
+                currentValidatedOrder = null;
+            } else {
+                // NF encontrada e ativa
+                clearInvoiceFeedback();
+                
+                // Salvar dados para uso posterior
+                currentValidatedOrder = {
+                    invoiceNumber: invoiceNumber.toUpperCase(),
+                    ...nfData
+                };
+                
+                // Mostrar resultado
+                invoiceNumberInput.className = 'form-input valid';
+                validationResult.classList.remove('hidden', 'error');
+                showFeedback(invoiceFeedback, 'Nota Fiscal validada com sucesso!', 'success');
+                showMessage('Nota fiscal encontrada!', 'success');
+                console.log('✅ Nota fiscal validada no Supabase');
+            }
         } else {
             // NF não encontrada
             hideValidationResult();
@@ -495,13 +510,16 @@ async function handleFormSubmission(event) {
     // Show loading state
     submitBtn.disabled = true;
     submitBtn.textContent = 'Enviando...';
+    showLoadingPopup();
     
     try {
-        // Upload comprovante para Supabase Storage
-        console.log('📸 Fazendo upload do comprovante...');
+        // Upload comprovante para Supabase Storage (bucket: comprovantes_entregas)
+        console.log('📸 Fazendo upload do comprovante para o bucket...');
         const proofUrl = await uploadProof(invoiceNumber, deliveryProofFile);
+        console.log('✅ Comprovante salvo em:', proofUrl);
         
-        // Salvar entrega no Supabase
+        // Salvar entrega no Supabase (tabela: delivery_output)
+        console.log('💾 Salvando dados de entrega na tabela delivery_output...');
         const deliveryRecord = await saveDelivery({
             invoiceNumber,
             deliveryType,
@@ -513,13 +531,14 @@ async function handleFormSubmission(event) {
         
         console.log('✅ Entrega salva no Supabase:', deliveryRecord);
         showSuccessResult();
-        showMessage('Entrega registrada com sucesso!', 'success');
+        showMessage('✅ Entrega registrada com sucesso!', 'success');
         
     } catch (error) {
-        console.error('Submit error:', error);
+        console.error('❌ Erro ao registrar entrega:', error);
         showMessage(error.message || 'Erro ao registrar entrega. Tente novamente.', 'error');
     } finally {
         // Restore button state
+        hideLoadingPopup();
         submitBtn.disabled = false;
         submitBtn.textContent = 'Registrar Entrega';
     }
