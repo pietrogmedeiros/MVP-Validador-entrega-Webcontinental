@@ -1,5 +1,151 @@
-// Import Supabase
-import { searchNF, saveDelivery, uploadProof } from './supabase.js'
+// Import functions from supabase.js
+// import { searchNF, saveDelivery, uploadProof } from './supabase.js'
+
+// Supabase client já está disponível globalmente via supabase-client.js
+// const supabase = window.supabase (já carregado)
+
+// Buscar NF na tabela nfs_storage
+async function searchNF(invoiceNumber) {
+    try {
+        console.log('🔍 Buscando NF:', invoiceNumber);
+        
+        const { data, error } = await supabase
+            .from('nfs_storage')
+            .select('*')
+            .eq('numero_nfe', invoiceNumber.toUpperCase())
+            .single()
+
+        if (error) {
+            console.error('❌ Erro na query:', error);
+            // Retornar null se não encontrado (código 406 ou PGRST116)
+            if (error.code === 'PGRST116' || error.status === 406) {
+                console.log('ℹ️ NF não encontrada');
+                return null;
+            }
+            throw error;
+        }
+
+        console.log('✅ NF encontrada:', data);
+        return data;
+    } catch (error) {
+        console.error('Erro ao buscar NF:', error);
+        return null;
+    }
+}
+
+// Salvar comprovante de entrega
+async function saveDelivery(deliveryData) {
+    try {
+        console.log('💾 Salvando entrega...');
+        const { data, error } = await supabase
+            .from('delivery_output')
+            .insert([{
+                numero_nfe: deliveryData.invoiceNumber,
+                tipo_entrega: deliveryData.deliveryType,
+                empresa_logistica: deliveryData.logisticsCompany || null,
+                nome_cliente: deliveryData.clientName || null,
+                cpf_cliente: deliveryData.clientCpf || null,
+                comprovante_url: deliveryData.proofUrl,
+                data_hora_registro: new Date().toISOString(),
+                created_at: new Date().toISOString()
+            }])
+            .select()
+
+        if (error) {
+            throw error
+        }
+
+        console.log('✅ Entrega salva:', data[0]);
+
+        // Incrementar contador de comprovantes na tabela transportadoras_ativas
+        console.log('📊 deliveryData.logisticsCompany =', deliveryData.logisticsCompany);
+        
+        if (deliveryData.logisticsCompany && deliveryData.logisticsCompany.trim() !== '') {
+            console.log(`📊 Incrementando contador para: ${deliveryData.logisticsCompany}`);
+            
+            try {
+                // Primeiro buscar o valor atual
+                const { data: currentData, error: fetchError } = await window.supabase
+                    .from('transportadoras_ativas')
+                    .select('contagem_comprovantes')
+                    .eq('transportadora', deliveryData.logisticsCompany)
+                    .single();
+                
+                console.log('📊 Busca de contador:', { currentData, fetchError });
+                
+                if (fetchError) {
+                    console.error('⚠️ Erro ao buscar contador:', fetchError);
+                } else {
+                    // Incrementar e atualizar
+                    const newCount = (currentData.contagem_comprovantes || 0) + 1;
+                    console.log(`📊 Novo count: ${newCount}`);
+                    
+                    const { data: updateData, error: updateError } = await window.supabase
+                        .from('transportadoras_ativas')
+                        .update({ contagem_comprovantes: newCount })
+                        .eq('transportadora', deliveryData.logisticsCompany)
+                        .select();
+                    
+                    console.log('📊 Resultado do UPDATE:', { updateData, updateError });
+                    
+                    if (updateError) {
+                        console.error('⚠️ Erro ao incrementar contador:', updateError);
+                    } else {
+                        console.log(`✅ Contador incrementado para ${deliveryData.logisticsCompany}: ${newCount}`);
+                    }
+                }
+            } catch (error) {
+                console.error('⚠️ Erro ao atualizar contador:', error);
+                // Não falhar a entrega se o contador falhar
+            }
+        }
+
+        return data[0]
+    } catch (error) {
+        console.error('Erro ao salvar entrega:', error)
+        throw error
+    }
+}
+
+// Upload de comprovante para o bucket
+async function uploadProof(invoiceNumber, file) {
+    try {
+        // Gerar nome único para o arquivo com timestamp
+        const timestamp = new Date().getTime();
+        const extension = file.type.includes('image') ? 'jpg' : 'jpg';
+        const fileName = `${invoiceNumber.toUpperCase()}_${timestamp}.${extension}`;
+        
+        // Criar pasta com data para organizar os comprovantes
+        const today = new Date().toISOString().split('T')[0];
+        const filePath = `comprovantes/${today}/${fileName}`;
+
+        // Upload do arquivo para o bucket 'comprovantes_entregas'
+        const { data, error } = await supabase
+            .storage
+            .from('comprovantes_entregas')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type || 'image/jpeg'
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        // Retornar URL pública do arquivo
+        const { data: { publicUrl } } = supabase
+            .storage
+            .from('comprovantes_entregas')
+            .getPublicUrl(filePath);
+
+        console.log('✅ Comprovante salvo no bucket:', publicUrl);
+        return publicUrl;
+    } catch (error) {
+        console.error('Erro ao fazer upload do comprovante:', error);
+        throw error;
+    }
+}
 
 // API Configuration - Always use HTTPS
 const API_CONFIG = {
@@ -69,6 +215,12 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFormState();
     setupEventListeners();
     
+    // Load transportadoras - wait for Supabase to be ready
+    setTimeout(() => {
+        console.log('Carregando transportadoras...');
+        loadTransportadoras();
+    }, 100);
+    
     // Initialize barcode scanner
     initBarcodeScanner();
 });
@@ -87,6 +239,63 @@ function initializeFormState() {
     if (logisticsFields) logisticsFields.classList.add('hidden');
     
     console.log('✅ Form state initialized');
+}
+
+// Load transportadoras from Supabase
+async function loadTransportadoras() {
+    try {
+        console.log('📦 [loadTransportadoras] Iniciando...');
+        console.log('📦 [loadTransportadoras] window.supabase =', typeof window.supabase);
+        console.log('📦 [loadTransportadoras] logisticsCompanySelect =', logisticsCompanySelect);
+        
+        // Verificar se supabase está disponível
+        if (typeof window.supabase === 'undefined' || !window.supabase) {
+            console.error('❌ [loadTransportadoras] Supabase não está disponível ainda');
+            console.log('📦 [loadTransportadoras] Tentando novamente em 300ms...');
+            setTimeout(loadTransportadoras, 300);
+            return;
+        }
+        
+        console.log('✅ [loadTransportadoras] Supabase disponível, fazendo query...');
+        const supabaseClient = window.supabase;
+        
+        const { data, error } = await supabaseClient
+            .from('transportadoras_ativas')
+            .select('id, transportadora')
+            .order('transportadora', { ascending: true });
+        
+        console.log('📦 [loadTransportadoras] Resposta:', { data, error });
+        
+        if (error) {
+            console.error('❌ [loadTransportadoras] Erro ao carregar transportadoras:', error);
+            return;
+        }
+        
+        if (!data || data.length === 0) {
+            console.warn('⚠️ [loadTransportadoras] Nenhuma transportadora encontrada');
+            return;
+        }
+        
+        console.log(`✅ [loadTransportadoras] ${data.length} transportadoras carregadas:`, data);
+        
+        // Limpar dropdown mantendo a opção padrão
+        logisticsCompanySelect.innerHTML = '<option value="">Selecione a transportadora</option>';
+        
+        // Adicionar opções do Supabase
+        data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.transportadora;
+            option.textContent = item.transportadora;
+            
+            logisticsCompanySelect.appendChild(option);
+            console.log(`✨ [loadTransportadoras] Adicionado: ${item.transportadora}`);
+        });
+        
+        console.log('✅ [loadTransportadoras] Concluído com sucesso!');
+        
+    } catch (error) {
+        console.error('❌ [loadTransportadoras] Erro exceção:', error);
+    }
 }
 
 function setupEventListeners() {

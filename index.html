@@ -65,6 +65,27 @@
                     <div class="field-feedback" id="invoice-feedback"></div>
                 </div>
 
+                <!-- Área de Validação -->
+                <div id="validation-result" class="validation-result hidden">
+                    <div class="validation-header">
+                        <h3>Nota Fiscal Validada</h3>
+                    </div>
+                    <div class="validation-content">
+                        <div class="validation-item">
+                            <span class="label">CPF (Confirmação):</span>
+                            <span class="value" id="customer-cpf"></span>
+                        </div>
+                        <div class="validation-item">
+                            <span class="label">CEP (Destino):</span>
+                            <span class="value" id="delivery-cep"></span>
+                        </div>
+                        <div class="validation-item">
+                            <span class="label">Produto:</span>
+                            <span class="value" id="product-description"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Campo: Tipo de Entrega -->
                 <div class="form-group">
                     <label for="delivery-type" class="form-label">
@@ -106,27 +127,6 @@
                             placeholder="000.000.000-00"
                             maxlength="14"
                         >
-                    </div>
-                </div>
-
-                <!-- Área de Validação -->
-                <div id="validation-result" class="validation-result hidden">
-                    <div class="validation-header">
-                        <h3>Nota Fiscal Validada</h3>
-                    </div>
-                    <div class="validation-content">
-                        <div class="validation-item">
-                            <span class="label">CPF (Confirmação):</span>
-                            <span class="value" id="customer-cpf"></span>
-                        </div>
-                        <div class="validation-item">
-                            <span class="label">CEP (Destino):</span>
-                            <span class="value" id="delivery-cep"></span>
-                        </div>
-                        <div class="validation-item">
-                            <span class="label">Produto:</span>
-                            <span class="value" id="product-description"></span>
-                        </div>
                     </div>
                 </div>
 
@@ -214,6 +214,25 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.3/dist/quagga.min.js"></script>
-    <script type="module" src="script-fixed.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4"></script>
+    <script>
+        console.log('🔧 Inicializando Supabase...');
+        console.log('window.supabase disponível?', typeof window.supabase);
+        
+        // Inicializar Supabase globalmente
+        const supabaseUrl = 'https://pnbsjmwatuhyijsuyjqe.supabase.co'
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuYnNqbXdhdHVoeWlqc3V5anFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTA2ODEsImV4cCI6MjA3Njg4NjY4MX0.DWETpGIUySVrooL81Ho-oM2mDS1ZqD3dDEoAqvLst7g'
+        
+        console.log('supabase biblioteca?', typeof supabase);
+        
+        if (typeof supabase !== 'undefined') {
+            window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey)
+            console.log('✅ Supabase cliente criado e atribuído a window.supabase')
+            console.log('window.supabase agora é:', typeof window.supabase)
+        } else {
+            console.error('❌ supabase não foi carregado do CDN')
+        }
+    </script>
+    <script src="script-fixed.js"></script>
 </body>
 </html>
