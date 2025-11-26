@@ -145,10 +145,10 @@
     <div class="container">
         <h1>📊 Códigos de Barras - Notas Fiscais</h1>
 
-        <!-- NF005678901 -->
+        <!-- Nota Fiscal A -->
         <div class="barcode-card">
             <div class="barcode-header">
-                <h2>Nota Fiscal 1</h2>
+                <h2>Nota Fiscal - João (Status: OK)</h2>
                 <p>Use este código de barras para testar o scanner</p>
             </div>
             <div class="barcode-container">
@@ -157,15 +157,15 @@
                 </div>
                 <div class="barcode-info">
                     <strong>Número da Nota Fiscal:</strong>
-                    <code>NF005678901</code>
+                    <code>123456789</code>
                 </div>
             </div>
         </div>
 
-        <!-- NF001234567 -->
+        <!-- Nota Fiscal B -->
         <div class="barcode-card">
             <div class="barcode-header">
-                <h2>Nota Fiscal 2</h2>
+                <h2>Nota Fiscal - Maria (Status: OK)</h2>
                 <p>Use este código de barras para testar o scanner</p>
             </div>
             <div class="barcode-container">
@@ -174,7 +174,58 @@
                 </div>
                 <div class="barcode-info">
                     <strong>Número da Nota Fiscal:</strong>
-                    <code>NF001234567</code>
+                    <code>987654321</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nota Fiscal C -->
+        <div class="barcode-card">
+            <div class="barcode-header">
+                <h2>Nota Fiscal - Pedro (Status: CANCELADO ⚠️)</h2>
+                <p>Use este código de barras para testar validação de cancelamento</p>
+            </div>
+            <div class="barcode-container">
+                <div class="barcode-wrapper">
+                    <svg id="barcode3"></svg>
+                </div>
+                <div class="barcode-info">
+                    <strong>Número da Nota Fiscal:</strong>
+                    <code>123459876</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nota Fiscal D -->
+        <div class="barcode-card">
+            <div class="barcode-header">
+                <h2>Nota Fiscal - Ana (Status: TRAN)</h2>
+                <p>Use este código de barras para testar o scanner</p>
+            </div>
+            <div class="barcode-container">
+                <div class="barcode-wrapper">
+                    <svg id="barcode4"></svg>
+                </div>
+                <div class="barcode-info">
+                    <strong>Número da Nota Fiscal:</strong>
+                    <code>025561800</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nota Fiscal E -->
+        <div class="barcode-card">
+            <div class="barcode-header">
+                <h2>Nota Fiscal - Carlos (Status: OK)</h2>
+                <p>Use este código de barras para testar o scanner</p>
+            </div>
+            <div class="barcode-container">
+                <div class="barcode-wrapper">
+                    <svg id="barcode5"></svg>
+                </div>
+                <div class="barcode-info">
+                    <strong>Número da Nota Fiscal:</strong>
+                    <code>036316460</code>
                 </div>
             </div>
         </div>
@@ -183,8 +234,8 @@
     </div>
 
     <script>
-        // Gerar código de barras para NF005678901
-        JsBarcode("#barcode1", "005678901", {
+        // Gerar código de barras para NF 123456789 (João - OK)
+        JsBarcode("#barcode1", "123456789", {
             format: "CODE128",
             width: 4,
             height: 150,
@@ -194,8 +245,41 @@
             background: "#f8f9fa"
         });
 
-        // Gerar código de barras para NF001234567
-        JsBarcode("#barcode2", "001234567", {
+        // Gerar código de barras para NF 987654321 (Maria - OK)
+        JsBarcode("#barcode2", "987654321", {
+            format: "CODE128",
+            width: 4,
+            height: 150,
+            displayValue: true,
+            fontSize: 28,
+            margin: 15,
+            background: "#f8f9fa"
+        });
+
+        // Gerar código de barras para NF 123459876 (Pedro - CANCELADO)
+        JsBarcode("#barcode3", "123459876", {
+            format: "CODE128",
+            width: 4,
+            height: 150,
+            displayValue: true,
+            fontSize: 28,
+            margin: 15,
+            background: "#fff3cd"
+        });
+
+        // Gerar código de barras para NF 025561800 (Ana - TRAN)
+        JsBarcode("#barcode4", "025561800", {
+            format: "CODE128",
+            width: 4,
+            height: 150,
+            displayValue: true,
+            fontSize: 28,
+            margin: 15,
+            background: "#f8f9fa"
+        });
+
+        // Gerar código de barras para NF 036316460 (Carlos - OK)
+        JsBarcode("#barcode5", "036316460", {
             format: "CODE128",
             width: 4,
             height: 150,
@@ -206,8 +290,11 @@
         });
 
         console.log("✅ Códigos de barras gerados com sucesso!");
-        console.log("NF005678901 - Código: 005678901");
-        console.log("NF001234567 - Código: 001234567");
+        console.log("NF 123456789 - João (OK)");
+        console.log("NF 987654321 - Maria (OK)");
+        console.log("NF 123459876 - Pedro (CANCELADO ⚠️)");
+        console.log("NF 025561800 - Ana (TRAN)");
+        console.log("NF 036316460 - Carlos (OK)");
     </script>
 </body>
 </html>

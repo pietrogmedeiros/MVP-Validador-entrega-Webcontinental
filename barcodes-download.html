@@ -54,26 +54,53 @@
     <h1>📥 Download Códigos de Barras</h1>
 
     <div class="card">
-        <h2>NF005678901</h2>
+        <h2>João - NF 123456789 (Status: OK)</h2>
         <canvas id="canvas1"></canvas>
-        <div class="info">Código: 005678901</div>
-        <button class="download-btn" onclick="downloadBarcode('canvas1', 'NF005678901')">
+        <div class="info">Código: 123456789</div>
+        <button class="download-btn" onclick="downloadBarcode('canvas1', 'NF-123456789-Joao')">
             ⬇️ Download PNG
         </button>
     </div>
 
     <div class="card">
-        <h2>NF001234567</h2>
+        <h2>Maria - NF 987654321 (Status: OK)</h2>
         <canvas id="canvas2"></canvas>
-        <div class="info">Código: 001234567</div>
-        <button class="download-btn" onclick="downloadBarcode('canvas2', 'NF001234567')">
+        <div class="info">Código: 987654321</div>
+        <button class="download-btn" onclick="downloadBarcode('canvas2', 'NF-987654321-Maria')">
+            ⬇️ Download PNG
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Pedro - NF 123459876 (Status: CANCELADO ⚠️)</h2>
+        <canvas id="canvas3"></canvas>
+        <div class="info">Código: 123459876</div>
+        <button class="download-btn" onclick="downloadBarcode('canvas3', 'NF-123459876-Pedro')">
+            ⬇️ Download PNG
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Ana - NF 025561800 (Status: TRAN)</h2>
+        <canvas id="canvas4"></canvas>
+        <div class="info">Código: 025561800</div>
+        <button class="download-btn" onclick="downloadBarcode('canvas4', 'NF-025561800-Ana')">
+            ⬇️ Download PNG
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Carlos - NF 036316460 (Status: OK)</h2>
+        <canvas id="canvas5"></canvas>
+        <div class="info">Código: 036316460</div>
+        <button class="download-btn" onclick="downloadBarcode('canvas5', 'NF-036316460-Carlos')">
             ⬇️ Download PNG
         </button>
     </div>
 
     <script>
-        // Gerar códigos de barras
-        JsBarcode("#canvas1", "005678901", {
+        // Gerar códigos de barras para as 5 notas fiscais
+        JsBarcode("#canvas1", "123456789", {
             format: "CODE128",
             width: 4,
             height: 150,
@@ -82,7 +109,34 @@
             margin: 15
         });
 
-        JsBarcode("#canvas2", "001234567", {
+        JsBarcode("#canvas2", "987654321", {
+            format: "CODE128",
+            width: 4,
+            height: 150,
+            displayValue: true,
+            fontSize: 28,
+            margin: 15
+        });
+
+        JsBarcode("#canvas3", "123459876", {
+            format: "CODE128",
+            width: 4,
+            height: 150,
+            displayValue: true,
+            fontSize: 28,
+            margin: 15
+        });
+
+        JsBarcode("#canvas4", "025561800", {
+            format: "CODE128",
+            width: 4,
+            height: 150,
+            displayValue: true,
+            fontSize: 28,
+            margin: 15
+        });
+
+        JsBarcode("#canvas5", "036316460", {
             format: "CODE128",
             width: 4,
             height: 150,
@@ -105,6 +159,11 @@
         // Auto-download ao carregar (opcional)
         window.addEventListener('load', function() {
             console.log('✅ Códigos de barras prontos para download!');
+            console.log('🔹 123456789 - João (OK)');
+            console.log('🔹 987654321 - Maria (OK)');
+            console.log('🔹 123459876 - Pedro (CANCELADO)');
+            console.log('🔹 025561800 - Ana (TRAN)');
+            console.log('🔹 036316460 - Carlos (OK)');
         });
     </script>
 </body>
