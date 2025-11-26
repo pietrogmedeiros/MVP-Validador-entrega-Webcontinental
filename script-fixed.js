@@ -288,6 +288,15 @@ async function validateInvoiceNumber() {
                     ...nfData
                 };
                 
+                // Exibir dados do cliente no frontend
+                showValidationSuccess({
+                    invoiceNumber: invoiceNumber.toUpperCase(),
+                    customerCPF: nfData.doc_cliente || nfData.cpf_cnpj || 'N/A',
+                    deliveryCEP: nfData.cep || 'N/A',
+                    productDescription: nfData.produto || 'N/A',
+                    deliveryStatus: nfData.status_pedido || 'N/A'
+                });
+                
                 // Mostrar resultado
                 invoiceNumberInput.className = 'form-input valid';
                 validationResult.classList.remove('hidden', 'error');
