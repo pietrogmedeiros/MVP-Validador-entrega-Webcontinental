@@ -1,13 +1,3 @@
-// API Configuration - mesma que a aplicação principal
-const API_CONFIG = {
-    baseURL: 'https://mw8t3gzzo9.execute-api.us-east-2.amazonaws.com/prod',
-    s3BaseURL: 'https://delivery-proofs-webcontinental.s3.us-east-2.amazonaws.com',
-    endpoints: {
-        deliveries: '/deliveries',
-        health: '/health'
-    }
-};
-
 // Estado da aplicação
 let allDeliveries = [];
 let filteredDeliveries = [];
@@ -75,29 +65,7 @@ function setupEventListeners() {
     // Modais
     closeModal.addEventListener('click', () => hideModal(deliveryModal));
     closeImageModal.addEventListener('click', () => hideModal(imageModal));
-    
-    // Download de imagem
-    downloadImage.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const url = downloadImage.href;
-        const filename = downloadImage.download;
-        
-        try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            
-            // Criar download
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(downloadUrl);
-            
-            console.log(`Download iniciado: ${filename}`);
-        } catch (error) {
+}
             console.error('Erro no download:', error);
             alert('Erro ao fazer download. Tente novamente.');
         }
@@ -126,30 +94,20 @@ async function loadDeliveries() {
     showLoading();
     
     try {
-        // Buscar dados reais do DynamoDB via API
-        const response = await fetch(`${API_CONFIG.baseURL}/health?list=deliveries`);
+        console.log('📦 Carregando entregas do Supabase...');
+        const data = await fetchDeliveries();
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error('API returned error');
-        }
-
-        allDeliveries = data.deliveries;
+        allDeliveries = data;
         filteredDeliveries = [...allDeliveries];
         
         updateStats();
         renderTable();
         hideLoading();
         
-        console.log(`${allDeliveries.length} entregas carregadas do DynamoDB`);
+        console.log(`✅ ${allDeliveries.length} entregas carregadas do Supabase`);
         
     } catch (error) {
-        console.error('Erro ao carregar entregas:', error);
+        console.error('❌ Erro ao carregar entregas:', error);
         showError('Erro ao carregar entregas. Tente novamente.');
         hideLoading();
     }
