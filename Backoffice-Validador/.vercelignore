@@ -1,0 +1,22 @@
+# Ignorar tudo da aplicação principal
+index.html
+styles.css
+script-fixed.js
+supabase.js
+supabase-client.js
+script.js
+script-api.js
+vite.config.js
+package.json
+package-lock.json
+backoffice/
+barcodes-*.html
+test-*.html
+*.sh
+*.md
+.env*
+.vercel/
+node_modules/
+
+# Manter apenas a pasta Backoffice-Validador
+!Backoffice-Validador/

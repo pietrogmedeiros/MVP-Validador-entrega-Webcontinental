@@ -1,0 +1,17 @@
+{
+  "name": "validador-backoffice",
+  "version": "1.0.0",
+  "description": "Backoffice para Validador de Entrega",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
