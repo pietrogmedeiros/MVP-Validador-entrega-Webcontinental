@@ -65,11 +65,6 @@ function setupEventListeners() {
     // Modais
     closeModal.addEventListener('click', () => hideModal(deliveryModal));
     closeImageModal.addEventListener('click', () => hideModal(imageModal));
-}
-            console.error('Erro no download:', error);
-            alert('Erro ao fazer download. Tente novamente.');
-        }
-    });
     
     // Fechar modal clicando fora
     [deliveryModal, imageModal].forEach(modal => {
