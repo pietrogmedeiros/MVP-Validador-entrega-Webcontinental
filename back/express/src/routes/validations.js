@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { getSupabase } from '../services/supabaseClient.js';
 import formidable from 'formidable';
+import fs from 'fs';
 
 // Upload para Supabase Storage (bucket: comprovantes_entregas)
 const uploadToSupabase = async (supabase, file) => {

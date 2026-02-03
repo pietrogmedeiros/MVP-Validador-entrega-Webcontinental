@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import { Html5QrcodeScanner } from 'html5-qrcode'
 
 type ValidationResult = {
   id?: string
@@ -6,10 +7,6 @@ type ValidationResult = {
   status?: string
   metadados?: Record<string, unknown>
   createdAt?: string
-}
-
-type UploadResponse = {
-  url: string
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -26,7 +23,9 @@ export function Validator() {
   const [loadingValidate, setLoadingValidate] = useState(false)
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null)
 
   // controla popup de loading
   const showLoading = () => {
@@ -65,50 +64,94 @@ export function Validator() {
     )
   }, [validation, deliveryType, logisticsCompany, clientName, clientCpf, file])
 
-  async function handleValidate() {
+  async function handleValidate(code?: string) {
+    const nfNumber = code || codigoEntrega
     setError(null)
-    setSuccess(null)
     setValidation(null)
-    if (!codigoEntrega.trim()) {
+    if (!nfNumber.trim()) {
       setError('Informe o número da NF')
       return
     }
     setLoadingValidate(true)
     showLoading()
     try {
-      const res = await fetch(`${API_URL}/api/validations?codigoEntrega=${encodeURIComponent(codigoEntrega)}`)
-      if (!res.ok) throw new Error(`Erro ao validar (${res.status})`)
+      console.log('Validando NF:', nfNumber)
+      const res = await fetch(`${API_URL}/api/validations?codigoEntrega=${encodeURIComponent(nfNumber)}`)
+      console.log('Status da resposta:', res.status)
+      
+      if (!res.ok) {
+        throw new Error(`Erro ao validar (${res.status})`)
+      }
+      
       const data: ValidationResult[] = await res.json()
-      if (data.length === 0) {
+      console.log('Dados recebidos:', data)
+      
+      if (!Array.isArray(data) || data.length === 0) {
         setError('NF não encontrada')
         setValidation(null)
         return
       }
+      
       setValidation(data[0])
-      setSuccess('NF validada com sucesso')
+      setError(null)
     } catch (err: unknown) {
-      console.error(err)
-      setError('Falha ao validar NF')
+      console.error('Erro completo:', err)
+      if (err instanceof Error) {
+        setError(`Erro: ${err.message}`)
+      } else {
+        setError('Falha ao validar NF')
+      }
     } finally {
       setLoadingValidate(false)
       hideLoading()
     }
   }
 
-  async function uploadFile(): Promise<string | null> {
-    if (!file) return null
-    const form = new FormData()
-    form.append('file', file)
-    const res = await fetch(`${API_URL}/api/uploads`, { method: 'POST', body: form })
-    if (!res.ok) throw new Error('Falha no upload')
-    const data: UploadResponse = await res.json()
-    return data.url
+  function handleOpenScanner() {
+    setShowScanner(true)
   }
+
+  function handleCloseScanner() {
+    if (scannerRef.current) {
+      scannerRef.current.clear()
+      scannerRef.current = null
+    }
+    setShowScanner(false)
+  }
+
+  function onScanSuccess(decodedText: string) {
+    setCodigoEntrega(decodedText)
+    handleCloseScanner()
+    // Validar diretamente com o valor escaneado
+    handleValidate(decodedText)
+  }
+
+  useEffect(() => {
+    if (showScanner && !scannerRef.current) {
+      scannerRef.current = new Html5QrcodeScanner(
+        'barcode-reader',
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 150 },
+          formatsToSupport: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] // Todos os formatos de código de barras
+        },
+        false
+      )
+      scannerRef.current.render(onScanSuccess, (error) => {
+        console.warn(`Erro no scanner: ${error}`)
+      })
+    }
+
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(() => {})
+      }
+    }
+  }, [showScanner])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    setSuccess(null)
     if (!canSubmit) {
       setError('Preencha todos os campos obrigatórios e valide a NF')
       return
@@ -116,26 +159,38 @@ export function Validator() {
     setLoadingSubmit(true)
     showLoading()
     try {
-      const proofUrl = await uploadFile()
-      const payload = {
-        codigoEntrega,
-        metadados: {
-          deliveryType,
-          logisticsCompany: deliveryType === 'transportadora' ? logisticsCompany : undefined,
-          clientName: deliveryType === 'cliente' ? clientName : undefined,
-          clientCpf: deliveryType === 'cliente' ? clientCpf : undefined,
-          proofUrl,
-        },
+      // Enviar tudo como multipart/form-data
+      const formData = new FormData()
+      formData.append('codigoEntrega', codigoEntrega)
+      formData.append('deliveryType', deliveryType)
+      
+      if (deliveryType === 'transportadora') {
+        formData.append('logisticsCompany', logisticsCompany)
+      } else if (deliveryType === 'cliente') {
+        formData.append('clientName', clientName)
+        formData.append('clientCpf', clientCpf)
       }
+      
+      if (file) {
+        formData.append('proof', file)
+      }
+
       const res = await fetch(`${API_URL}/api/validations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: formData,
       })
       if (!res.ok) throw new Error(`Erro ao registrar (${res.status})`)
       const data: ValidationResult = await res.json()
-      setSuccess('Entrega registrada com sucesso')
       setValidation(data)
+      setShowSuccessModal(true)
+      
+      // Limpar campos após sucesso
+      setDeliveryType('')
+      setLogisticsCompany('')
+      setClientName('')
+      setClientCpf('')
+      setFile(null)
+      setFilePreview(null)
     } catch (err: unknown) {
       console.error(err)
       setError('Falha ao registrar entrega')
@@ -161,7 +216,7 @@ export function Validator() {
             onChange={(e) => setCodigoEntrega(e.target.value)}
             required
           />
-          <button type="button" className="scan-btn" onClick={handleValidate} disabled={loadingValidate || !codigoEntrega}>
+          <button type="button" className="scan-btn" onClick={handleOpenScanner} title="Escanear código de barras">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="2" y="6" width="2" height="12" fill="currentColor" />
               <rect x="6" y="6" width="1" height="12" fill="currentColor" />
@@ -170,7 +225,6 @@ export function Validator() {
               <rect x="16" y="6" width="1" height="12" fill="currentColor" />
               <rect x="19" y="6" width="2" height="12" fill="currentColor" />
             </svg>
-            {loadingValidate ? 'Validando...' : 'Validar NF'}
           </button>
         </div>
         <div className="field-feedback">{error ? <span className="error">{error}</span> : null}</div>
@@ -286,15 +340,152 @@ export function Validator() {
         <span className="btn-text">{loadingSubmit ? 'Enviando...' : 'Registrar Entrega'}</span>
       </button>
 
-      <div id="submission-result" className={`submission-result ${success ? '' : 'hidden'}`}>
-        <div className="success-message">
-          <h3>Entrega Registrada com Sucesso!</h3>
-          <p>Obrigado por utilizar nosso sistema de validação.</p>
-          <button type="button" id="new-delivery" className="new-delivery-btn" onClick={() => { setValidation(null); setFile(null); setFilePreview(null); setSuccess(null); setCodigoEntrega(''); setDeliveryType(''); setLogisticsCompany(''); setClientCpf(''); setClientName(''); }}>
-            Nova Entrega
-          </button>
+      {error && !validation && (
+        <div className="alert alert-error" style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '8px', color: '#c33' }}>
+          <strong>❌ Erro:</strong> {error}
         </div>
-      </div>
+      )}
+
+      {/* Modal de Sucesso */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '40px 30px',
+            maxWidth: '400px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+            animation: 'slideIn 0.3s ease-out'
+          }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              backgroundColor: '#10b981',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px',
+              fontSize: '48px'
+            }}>
+              ✓
+            </div>
+            <h2 style={{ 
+              color: '#1f2937', 
+              marginBottom: '12px',
+              fontSize: '24px',
+              fontWeight: '700'
+            }}>
+              Entrega Registrada!
+            </h2>
+            <p style={{ 
+              color: '#6b7280', 
+              marginBottom: '24px',
+              fontSize: '16px',
+              lineHeight: '1.5'
+            }}>
+              Sua entrega foi registrada com sucesso no sistema.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowSuccessModal(false)
+                setValidation(null)
+                setCodigoEntrega('')
+                setDeliveryType('')
+                setLogisticsCompany('')
+                setClientCpf('')
+                setClientName('')
+              }}
+              style={{
+                backgroundColor: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '14px 32px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+            >
+              Nova Entrega
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Scanner de Código de Barras */}
+      {showScanner && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '20px',
+            maxWidth: '500px',
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            <h2 style={{ 
+              color: '#1f2937', 
+              marginBottom: '16px',
+              fontSize: '20px',
+              fontWeight: '700'
+            }}>
+              Escaneie o Código de Barras
+            </h2>
+            <div id="barcode-reader" style={{ width: '100%' }}></div>
+            <button
+              type="button"
+              onClick={handleCloseScanner}
+              style={{
+                marginTop: '16px',
+                backgroundColor: '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </form>
   )
 }
