@@ -12,5 +12,6 @@ export function getSupabase() {
     console.warn('⚠️ Supabase não configurado (SUPABASE_URL/SUPABASE_SERVICE_KEY ausentes), usando mock')
     return null
   }
+  console.log('✅ Supabase configurado:', SUPABASE_URL.substring(0, 30) + '...')
   return createClient(SUPABASE_URL, SUPABASE_KEY)
 }

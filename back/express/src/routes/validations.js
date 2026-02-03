@@ -29,19 +29,21 @@ router.get('/', async (req, res) => {
   const { codigoEntrega } = req.query;
   const supabase = getSupabase();
 
+  console.log('🔍 GET /api/validations - Supabase instance:', supabase ? 'CONNECTED' : 'MOCK MODE');
+
   if (!supabase) {
     const all = [...mockValidations.values()];
     const result = codigoEntrega ? all.filter(v => v.codigoEntrega === codigoEntrega) : all;
+    console.log('⚠️ Returning MOCK data:', result.length, 'records');
     return res.json(result);
   }
 
   try {
-    // Consulta tabela nfs_storage filtrando por numero_nfe
+    // Consulta tabela delivery_output
     let query = supabase
-      .from('nfs_storage')
+      .from('delivery_output')
       .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .order('created_at', { ascending: false });
 
     if (codigoEntrega) {
       query = query.eq('numero_nfe', codigoEntrega);
@@ -50,20 +52,23 @@ router.get('/', async (req, res) => {
     const { data, error } = await query;
     if (error) throw error;
 
+    console.log(`📊 Found ${data?.length || 0} records in delivery_output`);
+
     const mapped = (data || []).map((row) => ({
       id: row.id,
       codigoEntrega: row.numero_nfe,
-      status: row.status_entrega || row.status_pedido || 'pendente',
+      status: row.status_entrega || 'pendente',
       metadados: {
-        cpf: row.cpf_cnpj,
-        cep: row.cep,
-        produto: row.produto,
-        cliente: row.cliente,
-        transportadora: row.transportadora,
-        pedido_mkp: row.pedido_mkp,
-        canal_any: row.canal_any,
+        clientName: row.nome_cliente,
+        clientCpf: row.cpf_cliente,
+        produto: row.tipo_entrega,
+        valor: null,
+        proofUrl: row.comprovante_url,
+        logisticsCompany: row.empresa_logistica,
+        observacoes: row.observacoes,
       },
       createdAt: row.created_at,
+      dataEntrega: row.data_entrega,
     }));
 
     return res.json(mapped);
@@ -77,6 +82,56 @@ router.get('/:id', (req, res) => {
   const item = mockValidations.get(req.params.id);
   if (!item) return res.status(404).json({ error: 'Validação não encontrada' });
   res.json(item);
+});
+
+// Rota para download de comprovante
+router.get('/download/:id', async (req, res) => {
+  const supabase = getSupabase();
+  
+  if (!supabase) {
+    return res.status(500).json({ error: 'Supabase não configurado' });
+  }
+
+  try {
+    const { id } = req.params;
+    
+    // Buscar registro na tabela delivery_output
+    const { data, error } = await supabase
+      .from('delivery_output')
+      .select('comprovante_url, numero_nfe')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    if (!data || !data.comprovante_url) {
+      return res.status(404).json({ error: 'Comprovante não encontrado' });
+    }
+
+    // Extrair path do bucket da URL pública
+    const urlParts = data.comprovante_url.split('/storage/v1/object/public/comprovantes_entregas/');
+    if (urlParts.length < 2) {
+      return res.status(500).json({ error: 'URL inválida' });
+    }
+    const filePath = urlParts[1];
+
+    // Fazer download do arquivo do Supabase
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('comprovantes_entregas')
+      .download(filePath);
+
+    if (downloadError) throw downloadError;
+
+    // Converter blob para buffer e enviar como download
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+    const filename = `comprovante_${data.numero_nfe}.jpg`;
+    
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Falha ao buscar comprovante' });
+  }
 });
 
 router.post('/', (req, res) => {

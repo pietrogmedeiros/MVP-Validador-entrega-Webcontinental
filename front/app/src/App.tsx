@@ -1,11 +1,14 @@
 import './App.css'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Validator from './components/Validator'
 import Backoffice from './components/Backoffice'
 import webLogo from './assets/web.png'
 import animacao from './assets/animacao.svg'
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const location = useLocation()
+  const isBackoffice = location.pathname === '/backoffice'
+  
   return (
     <div className="page-bg">
       <div id="loading-popup" className="loading-popup hidden">
@@ -17,7 +20,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <div className="container">
+      <div className={isBackoffice ? 'container container-wide' : 'container'}>
         <header>
           <div className="header-logo">
             <img src={webLogo} alt="Web Continental Logo" className="company-logo" />
@@ -46,9 +49,9 @@ function App() {
       <Route
         path="/backoffice"
         element={
-          <Layout>
+          <div className="page-bg-backoffice">
             <Backoffice />
-          </Layout>
+          </div>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

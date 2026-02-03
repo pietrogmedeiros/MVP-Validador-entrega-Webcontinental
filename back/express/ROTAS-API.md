@@ -4,11 +4,41 @@ Base URL: `http://localhost:3000`
 
 ---
 
-## 🔍 **Validação de Nota Fiscal**
+## Lista de Entregas
 
 ### `GET /api/validations`
 
-Busca informações de uma nota fiscal no banco de dados.
+Lista todas as entregas registradas no sistema (tabela delivery_output).
+
+**Resposta de Sucesso (200):**
+```json
+[
+  {
+    "id": 1,
+    "codigoEntrega": "123456789",
+    "status": "recebido",
+    "metadados": {
+      "clientName": "João Silva",
+      "clientCpf": "12345678900",
+      "produto": "transportadora",
+      "valor": null,
+      "proofUrl": "https://supabase.co/storage/.../proof.jpg",
+      "logisticsCompany": "Jadlog",
+      "observacoes": null
+    },
+    "createdAt": "2026-02-03T15:30:00Z",
+    "dataEntrega": null
+  }
+]
+```
+
+---
+
+## Validação de Nota Fiscal
+
+### `GET /api/validations?codigoEntrega={nf}`
+
+Busca informações de uma nota fiscal específica no banco de dados.
 
 **Query Parameters:**
 - `codigoEntrega` (string, obrigatório) - Número da nota fiscal
@@ -46,7 +76,7 @@ GET http://localhost:3000/api/validations?codigoEntrega=123456789
 
 ---
 
-## 📦 **Registro de Entrega**
+## Registro de Entrega
 
 ### `POST /api/validations`
 
@@ -105,7 +135,48 @@ fetch('http://localhost:3000/api/validations', {
 
 ---
 
-## 📤 **Upload de Arquivo**
+## Download de Comprovante
+
+### `GET /api/validations/download/:id`
+
+Baixa o comprovante fotográfico de uma entrega específica.
+
+**Path Parameters:**
+- `id` (number, obrigatório) - ID do registro na tabela delivery_output
+
+**Exemplo de Requisição:**
+```bash
+GET http://localhost:3000/api/validations/download/1
+```
+
+**Resposta de Sucesso (200):**
+Retorna o arquivo de imagem diretamente com headers:
+```
+Content-Type: image/jpeg
+Content-Disposition: attachment; filename="comprovante_123456789.jpg"
+```
+
+**Resposta de Erro (404):**
+```json
+{
+  "error": "Comprovante não encontrado"
+}
+```
+
+**Uso no Frontend:**
+```javascript
+// Download automático
+const link = document.createElement('a')
+link.href = `${API_URL}/api/validations/download/${id}`
+link.download = `comprovante_${nfe}.jpg`
+document.body.appendChild(link)
+link.click()
+document.body.removeChild(link)
+```
+
+---
+
+## Upload de Arquivo
 
 ### `POST /api/uploads`
 
@@ -136,7 +207,7 @@ fetch('http://localhost:3000/api/uploads', {
 
 ---
 
-## 🏥 **Health Check**
+## Health Check
 
 ### `GET /health`
 
@@ -152,7 +223,7 @@ Verifica se a API está funcionando.
 
 ---
 
-## ⚙️ **Configuração**
+## Configuração
 
 ### Variáveis de Ambiente (.env)
 
@@ -176,7 +247,7 @@ CORS está habilitado para todas as origens em desenvolvimento.
 
 ---
 
-## 🚀 **Como Executar**
+## Como Executar
 
 ```bash
 # Desenvolvimento
@@ -188,7 +259,7 @@ npm start
 
 ---
 
-## 📊 **Estrutura do Banco de Dados**
+## Estrutura do Banco de Dados
 
 ### Tabela: `nfs_storage`
 Armazena informações das notas fiscais para validação.
