@@ -1,0 +1,25 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: validador-app
+#   namespace: validador
+#   annotations:
+#     nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+# spec:
+#   ingressClassName: nginx
+#   rules:
+#     - host: <seu-dominio>
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: validador-app
+#                 port:
+#                   number: 80
+#   tls:
+#     - hosts:
+#         - <seu-dominio>
+#       secretName: <tls-secret>
+
